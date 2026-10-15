@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RF Word Finder</title>
+<style>
+
+:root{--bg:#f7f8fc;--ink:#1f2937;--mut:#7a8396;--acc:#4f63d8;--accd:#3f51bf;--warm:#f0b45a;--line:#e8ebf3;--soft:#eff2fb;--footer-h:clamp(20px,3.2vh,30px)}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;overflow:hidden;overscroll-behavior:none}
+body{position:fixed;inset:0;width:100%;font-family:system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid var(--line);border-radius:1.3vh;background:#fff;padding:.9vh 1.8vh;font-weight:600;font-size:2vh;color:var(--ink);transition:background .15s,border-color .15s,box-shadow .15s}
+button:hover:not(:disabled){border-color:var(--acc);background:var(--soft)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.pri{background:var(--acc);border-color:var(--acc);color:#fff}.pri:hover:not(:disabled){background:var(--accd);border-color:var(--accd)}.pri{box-shadow:0 .5vh 1.6vh #4f63d833}
+.ghost{border-color:transparent;background:transparent;box-shadow:none;color:var(--mut);font-size:1.8vh;padding:.6vh 1.2vh}
+.lnk{border:0;background:none;color:var(--acc);text-decoration:underline;font-size:1.9vh}
+#ft{position:fixed;left:0;right:0;bottom:0;height:var(--footer-h);display:flex;align-items:center;justify-content:center;font-size:1.6vh;color:var(--mut);background:var(--bg);border-top:1px solid var(--line);z-index:50;white-space:nowrap;overflow:hidden;padding:0 1vh}
+#app{height:calc(100% - var(--footer-h));height:calc(100dvh - var(--footer-h));display:flex;flex-direction:column;gap:1.2vh;padding:1.4vh 1.6vw}
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:1vh;flex-wrap:wrap}
+.brand{font-size:2.7vh;font-weight:700;letter-spacing:.1vh}.brand span{color:var(--acc)}
+.row{display:flex;flex-wrap:wrap;gap:1vh;justify-content:center;align-items:center}
+.auth{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.6vh}
+.logo{font-size:6vh;font-weight:700}.logo span{color:var(--acc)}
+.tag{font-size:2.3vh;color:var(--mut)}
+.card{background:#fff;border:1px solid var(--line);border-radius:2.2vh;box-shadow:0 .6vh 2.4vh #1f29370d}
+.a{width:min(92vw,52vh);padding:2.4vh;display:flex;flex-direction:column;gap:1.3vh}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:.6vh;background:var(--soft);padding:.5vh;border-radius:1.6vh}
+.tabs button{border:0;background:transparent;color:var(--mut)}.tabs button.on{background:#fff;color:var(--ink);box-shadow:0 .2vh .8vh #0001}
+input{font-size:2.2vh;padding:1.3vh 1.6vh;border-radius:1.3vh;border:1px solid var(--line);background:#fff;width:100%;outline:none}
+input:focus,textarea:focus{border-color:var(--acc)}
+.err{color:#d1523f;font-weight:600;min-height:2.6vh;font-size:2vh;text-align:center}
+.fine{font-size:1.6vh;color:var(--mut);text-align:center;line-height:1.4}
+.setup{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vh}
+.title{font-size:5vh;font-weight:700;text-align:center}.title span{color:var(--acc)}
+.sub{font-size:1.9vh;letter-spacing:.3vh;color:var(--mut);font-weight:600}
+.sec{width:100%}
+.lbl{font-size:2vh;font-weight:700;color:var(--mut);text-align:center;margin-bottom:.7vh;text-transform:uppercase;letter-spacing:.15vh}
+.two{display:flex;gap:4vw;justify-content:center}
+.opt.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.setup input{width:25vh;text-align:center}
+select{font:inherit;font-size:2vh;padding:1vh 1.4vh;border-radius:1.3vh;border:1px solid var(--line);background:#fff}
+.big{font-size:3vh;padding:1.2vh 5vh}
+#sb{display:flex;gap:1vh;align-items:stretch;padding:.8vh 1.2vh}
+.tm{flex:1;text-align:center;border-bottom:.5vh solid transparent;padding:.3vh}
+.tm.act{border-bottom-color:var(--acc)}.tm .n{color:var(--ink)}
+.tm b{display:block;font-size:2.1vh;color:var(--mut);font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tm .n{font-size:6vh;font-weight:700;line-height:1.05}
+.tm button{font-size:1.5vh;padding:.3vh 1vh;margin-top:.3vh}
+.mid{flex:1.1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;font-weight:700;font-size:2vh;letter-spacing:.2vh}
+.mid small{color:var(--mut);font-size:1.7vh;font-weight:600;letter-spacing:0}
+.main{flex:1;min-height:0;display:grid;grid-template-columns:1.05fr 1fr;gap:1.4vh}
+.scene{position:relative;min-height:0;border-radius:2.4vh;overflow:hidden;border:1px solid var(--line);background:repeating-linear-gradient(90deg,#e9f2ec 0 7vw,#e2eee7 7vw 14vw)}
+.goal{position:absolute;left:50%;top:9%;transform:translateX(-50%);height:46%;aspect-ratio:2.1/1;max-width:94%;border:.6vh solid #334155;border-bottom:0;border-radius:.8vh .8vh 0 0;background:#fff8;background-image:linear-gradient(#1f29371a .2vh,transparent .2vh),linear-gradient(90deg,#1f29371a .2vh,transparent .2vh);background-size:2.4vh 2.4vh}
+.goal.net{animation:ripple .6s}
+.keeper{position:absolute;left:0;right:0;bottom:0;height:66%;display:flex;justify-content:center}
+.keeper svg{height:100%;width:auto;aspect-ratio:.6;animation:sway 1.2s ease-in-out infinite alternate}
+.ball{position:absolute;left:50%;bottom:6%;width:8vh;height:8vh;margin-left:-4vh;z-index:3}
+.spot{position:absolute;left:50%;bottom:4%;width:11vh;height:2.4vh;margin-left:-5.5vh;border-radius:50%;background:#1f293714}
+.bn{position:fixed;left:0;right:0;top:38%;text-align:center;font-size:14vh;font-weight:700;z-index:30;pointer-events:none;text-shadow:0 .4vh 2vh #fff;animation:pop .6s,out .5s 1.8s forwards}
+.bn.goal{color:var(--acc)}.bn.assist{color:#c58512}.bn.team{color:#52707f;font-size:9vh}
+.pan{display:flex;flex-direction:column;gap:1.1vh;padding:1.6vh 2vh;min-height:0;overflow-y:auto;scrollbar-width:none}.pan>*{flex-shrink:0}.pan>.rword{flex-shrink:1}
+.rd{font-size:1.8vh;font-weight:700;color:var(--mut);text-align:center;letter-spacing:.2vh}
+.word{flex:1;min-height:0;font-size:14vh;font-weight:700;text-align:center;line-height:1.1;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.word.s{font-size:5vh;line-height:1.3}.word.p{font-size:3.3vh;line-height:1.4;font-weight:700}
+.word.s span,.word.p span{display:block}
+.hl{color:var(--acc);text-decoration:underline;text-decoration-thickness:.5vh;text-underline-offset:.8vh}
+.ref{min-height:6vh;font-size:2.3vh;color:var(--mut);text-align:center;display:flex;align-items:center;justify-content:center}
+.done{font-size:3.4vh;padding:1.6vh 0;width:100%}
+.tp{display:flex;flex-direction:column;gap:1vh}
+.tl{font-size:2vh;font-weight:700;color:var(--mut);text-align:center}
+.tb{display:grid;grid-template-columns:1fr 1fr;gap:1vh}
+.tb button{font-size:2.3vh;padding:1.5vh 1vh;border-width:2px}
+.g1{background:#e6f6ee;border-color:#bfe3d0;color:#1d6b4b}.g2{background:#e3f4f3;border-color:#bfe0dd;color:#126a64}
+.g3{background:#fef3df;border-color:#f3dba9;color:#8a5a0a}.g4{background:#eff1f7;border-color:#d9deea;color:#475569}
+.pr{font-size:2.3vh;text-align:center;line-height:1.4}
+.ov{position:fixed;inset:0 0 var(--footer-h) 0;background:#1f293766;backdrop-filter:blur(.6vh);display:flex;align-items:center;justify-content:center;padding:1.5vh;z-index:10}
+.box{background:#fff;border:1px solid var(--line);border-radius:3vh;box-shadow:0 2vh 6vh #1f293733;padding:2.4vh;width:min(96vw,1100px);max-height:calc(100dvh - var(--footer-h) - 2vh);overflow-y:auto;scrollbar-width:none;text-align:center;display:flex;flex-direction:column;gap:1.3vh;align-items:center}
+.q2{font-size:3vh;font-weight:700}.ans{font-size:4.2vh;font-weight:700}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:1.2vh;text-align:left;width:100%}
+.rg div{background:var(--soft);border-radius:1.8vh;padding:1.3vh 1.5vh;font-size:1.85vh;line-height:1.4}
+.rg h3{margin:0 0 .5vh;color:var(--acc);font-size:2.3vh}
+.st{display:grid;grid-template-columns:repeat(3,1fr);gap:1vh;width:100%}
+.st div{background:var(--soft);border-radius:1.6vh;padding:1vh}.st b{display:block;font-size:3.8vh}.st small{font-size:1.7vh;color:var(--mut)}
+.nt{font-size:2vh;text-align:left;width:100%;line-height:1.45}
+textarea{width:100%;height:30vh;border:1px solid var(--line);border-radius:1.4vh;padding:1.2vh;font-size:1.7vh;line-height:1.4;resize:none;background:var(--bg);font-family:ui-monospace,Menlo,Consolas,monospace}
+.hist{width:100%;display:flex;flex-direction:column;gap:.8vh;max-height:50vh;overflow-y:auto}
+.hist div{display:flex;justify-content:space-between;align-items:center;gap:1vh;background:var(--soft);border-radius:1.4vh;padding:1vh 1.4vh;text-align:left;font-size:1.9vh}
+.cf{position:fixed;top:-6vh;width:1.4vh;height:2.2vh;border-radius:.3vh;animation:fall 3.2s linear forwards;z-index:40;pointer-events:none}
+@keyframes fall{to{transform:translateY(112vh) rotate(540deg)}}
+@keyframes sway{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+@keyframes ripple{40%{filter:brightness(.85)}}
+@keyframes out{to{opacity:0}}
+@keyframes pop{0%{transform:scale(.2);opacity:0}70%{transform:scale(1.1)}100%{transform:scale(1);opacity:1}}
+
+.main2{flex:1;min-height:0;display:grid;grid-template-columns:1.1fr 1fr;gap:1.4vh}
+.left{min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;container-type:size}
+.board{--bs:min(100cqw,100cqh);display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));grid-template-rows:repeat(var(--n),minmax(0,1fr));gap:.7vh;width:var(--bs);height:var(--bs);flex:none;margin:0 auto;text-align:center;letter-spacing:0;touch-action:none;user-select:none;-webkit-user-select:none;background:#fff;border:1px solid var(--line);border-radius:2.2vh;padding:1.4vh;box-shadow:0 .6vh 2.4vh #1f29370d}
+.cell{display:flex;align-items:center;justify-content:center;border-radius:1.2vh;font-weight:600;font-size:calc(min(64vh,50vw,var(--bs))/var(--n)*.5);background:#f3f5fc;color:#334155;cursor:pointer;line-height:1;min-width:0;min-height:0;padding:0;overflow:hidden}
+.cell.sel{background:var(--acc);color:#fff;box-shadow:0 .4vh 1.2vh #4f63d84d}
+.cell.f{text-decoration:underline;text-decoration-thickness:.4vh}
+.f0{background:#d7f0e4}.f1{background:#fde8c4}.f2{background:#d6e6fb}.f3{background:#e8dcf7}.f4{background:#fbd9d5}.f5{background:#e3f0c6}
+.txt{background:#fff;border:1px solid var(--line);border-radius:2.2vh;padding:2.6vh;color:#334155;font-size:min(4vh,3.3vw);line-height:1.7;box-shadow:0 1vh 3vh #1f293712;max-height:100%;width:100%;overflow-y:auto;scrollbar-width:none}
+.w{cursor:pointer;border-radius:.8vh;padding:0 .3vh}.w.sel{background:var(--acc);color:#fff}.w.fnd{text-decoration:underline;text-decoration-thickness:.4vh}
+.selw{min-height:7vh;font-size:5vh;font-weight:700;text-align:center;letter-spacing:.6vh;display:flex;align-items:center;justify-content:center;color:var(--acc)}
+.selw.t{font-size:2.6vh;letter-spacing:0}
+.msgl{min-height:6vh;font-size:2.1vh;color:var(--mut);text-align:center;display:flex;align-items:center;justify-content:center}
+.chips{display:flex;flex-wrap:wrap;gap:.8vh;justify-content:center;max-height:17vh;overflow-y:auto;scrollbar-width:none}
+.chip.ms{background:#fdf0d9;color:#8a5a0a;letter-spacing:0}.chip{font-size:2vh;padding:.6vh 1.4vh;border-radius:5vh;background:var(--soft);color:var(--mut);letter-spacing:.3vh;border:1px solid transparent}.chip.on{background:var(--acc);color:#fff;letter-spacing:0}
+.clue{font-size:2.3vh;font-weight:600;text-align:center;background:var(--soft);border-radius:1.6vh;padding:1.2vh;color:#334155}
+.rword{flex:1;min-height:0;font-size:13vh;font-weight:700;text-align:center;line-height:1.1;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.rword.t{font-size:4.2vh;line-height:1.3}
+.cell.hint,.w.hint{animation:hp 1s ease-in-out infinite alternate;box-shadow:0 0 0 .5vh var(--warm) inset}
+.cell.ms{background:#fdf0d9;box-shadow:0 0 0 .35vh var(--warm) inset}.w.mis{background:#fdf0d9;text-decoration:underline;text-decoration-style:dotted;text-decoration-thickness:.4vh}
+@keyframes hp{from{filter:brightness(1)}to{filter:brightness(.88)}}
+.acts{display:flex;gap:1vh;justify-content:center;flex-wrap:wrap}
+.acts button{font-size:2vh}
+.fin{border-color:#d9deea;color:#475569}
+@media (max-aspect-ratio:1/1){
+.main2{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1.05fr) minmax(0,1fr)}
+.board{--bs:min(100%,48vh);--bs:min(100cqw,100cqh)}
+.txt{font-size:min(3.2vh,5.2vw)}
+.st{grid-template-columns:repeat(2,1fr)}
+}
+@supports not (width:1cqw){.board{--bs:min(100%,64vh)}}
+.pts{position:fixed;left:50%;top:13%;transform:translateX(-50%);background:#fff;border:1px solid var(--line);border-radius:3vh;padding:1.2vh 3.2vh;font-size:3.2vh;font-weight:700;color:var(--accd);box-shadow:0 1vh 3vh #1f293722;z-index:35;pointer-events:none;text-align:center;animation:ptsin .3s,out .5s 2.7s forwards}.pts small{display:block;font-size:1.9vh;color:var(--mut);font-weight:600;margin-top:.3vh}
+@keyframes ptsin{from{opacity:0;transform:translate(-50%,-1.2vh)}}
+.pv{display:flex;flex-wrap:wrap;gap:1vh;justify-content:center;max-width:90vw}
+.pv div{display:flex;gap:.5vh;align-items:center;background:#fff;border:1px solid var(--line);border-radius:1.6vh;padding:.8vh 1.2vh;font-size:2.6vh;font-weight:700}
+.pv button{font-size:1.5vh;padding:.4vh .9vh}
+
+/* ===== Setup v3: hero + numbered steps + live hunt pass ===== */
+.setup.v2{display:block;overflow-y:auto;overflow-x:hidden;overflow-anchor:none;padding:0 .6vw 2vh;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.setup.v2 input{width:100%;text-align:left}
+.v2 .row input{width:auto;flex:1;min-width:16vh}
+.hero{position:relative;overflow:hidden;border-radius:2.6vh;background:linear-gradient(120deg,#3445b8,#4f63d8 55%,#7184ee);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:3vh;padding:2.2vh 3vh;margin-bottom:1.6vh;box-shadow:0 1.2vh 3vh #4f63d833}
+.hero:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,#ffffff0f 0 7vw,transparent 7vw 14vw)}
+.hero>*{position:relative}
+.hero .pill{display:inline-block;background:#ffffff26;border:1px solid #ffffff44;border-radius:5vh;padding:.5vh 1.6vh;font-size:1.5vh;font-weight:700;letter-spacing:.25vh;margin-bottom:1vh}
+.hero h1{margin:0;font-size:4.6vh;line-height:1.1}.hero h1 span{color:#ffd68a}
+.hero p{margin:.8vh 0 0;font-size:2.1vh;opacity:.92;max-width:62vh}
+.mini{display:grid;grid-template-columns:repeat(7,4.2vh);gap:.5vh;flex:none;transform:rotate(-3deg)}
+.mini i{font-style:normal;height:4.2vh;display:grid;place-items:center;border-radius:1vh;background:#ffffff1f;font-weight:700;font-size:2vh;color:#ffffffb8}
+.mini i.hit{background:#f0b45a;color:#4a2f04;box-shadow:0 .4vh 1.2vh #0003}
+.lay{display:grid;grid-template-columns:minmax(0,1fr) 41vh;gap:1.8vh;align-items:start}
+.s2{background:#fff;border:1px solid var(--line);border-radius:2.4vh;box-shadow:0 .6vh 2.4vh #1f29370d;padding:2.2vh 2.6vh 2.4vh;margin-bottom:1.6vh}
+.sh2{display:flex;gap:1.6vh;align-items:center;margin-bottom:1.6vh}
+.sn{width:5vh;height:5vh;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-weight:700;font-size:2.4vh;flex:none;box-shadow:0 .5vh 1.4vh #4f63d844}
+.sh2 h2{margin:0;font-size:3vh}.sh2 p{margin:.3vh 0 0;font-size:1.8vh;color:var(--mut)}
+.gl{font-size:1.6vh;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.2vh;margin:1.8vh 0 1vh;display:flex;align-items:center;gap:1vh}
+.gl:after{content:"";flex:1;height:1px;background:var(--line)}
+.gl:first-child{margin-top:0}
+.v2 .s2 .sec{background:none;border:0;box-shadow:none;padding:0;width:100%}
+.v2 .s2 .sec>.lbl{display:none}
+.v2 .s2 .row{justify-content:flex-start}
+.seg{display:inline-flex;background:var(--soft);padding:.5vh;border-radius:5vh;gap:.3vh;flex-wrap:wrap}
+.seg button{border:0;background:transparent;color:var(--mut);border-radius:5vh;padding:.9vh 2vh;font-size:2vh}
+.seg button.on{background:var(--acc);color:#fff;box-shadow:0 .4vh 1.2vh #4f63d838}
+.seg button:hover:not(.on){background:#fff;border:0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(25vh,1fr));gap:1vh}
+.tile{text-align:left;border-radius:1.8vh;padding:1.3vh 1.6vh;border:2px solid var(--line);background:#fff;font-size:2.1vh;line-height:1.25}
+.tile.on{border-color:var(--acc);background:var(--soft);color:var(--accd)}
+.tile small{display:block;font-weight:500;color:var(--mut);font-size:1.6vh;margin-top:.4vh}
+.chks{display:flex;flex-wrap:wrap;gap:1vh}
+.chk{display:inline-flex;align-items:center;gap:1.1vh;border-radius:1.8vh;padding:1.1vh 1.8vh;border:2px solid var(--line);background:#fff;font-size:2.1vh}
+.chk i{width:2.6vh;height:2.6vh;border-radius:.7vh;border:2px solid #c5cbe0;display:grid;place-items:center;font-style:normal;font-size:1.8vh;color:#fff}
+.chk.on{border-color:var(--acc);background:var(--soft)}
+.chk.on i{background:var(--acc);border-color:var(--acc)}.chk.on i:after{content:"\2713"}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(31vh,1fr));gap:1.8vh 2.4vh;margin-top:1.8vh}
+.cl{font-size:1.6vh;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.2vh;margin-bottom:.9vh}
+.ch{font-size:1.6vh;color:var(--mut);margin-top:.7vh;line-height:1.35}
+.pass{position:sticky;top:0;background:linear-gradient(170deg,#2c3a98,#4558cc);color:#fff;border-radius:2.6vh;padding:2.4vh 2.6vh;box-shadow:0 1.4vh 3.6vh #3f51bf44;overflow:hidden}
+.pass:before,.pass:after{content:"";position:absolute;width:3vh;height:3vh;border-radius:50%;background:var(--bg);top:calc(100% - 13vh)}
+.pass:before{left:-1.5vh}.pass:after{right:-1.5vh}
+.pass .k{font-size:1.6vh;letter-spacing:.3vh;text-transform:uppercase;opacity:.75;font-weight:700}
+.pass h3{margin:.4vh 0 .2vh;font-size:3.6vh;line-height:1.1}
+.pass .pp{font-size:2vh;color:#ffd68a;font-weight:600;margin-bottom:1.2vh;overflow-wrap:anywhere}
+.kv{display:flex;justify-content:space-between;gap:1.4vh;padding:.8vh 0;border-bottom:1px dashed #ffffff33;font-size:1.85vh}
+.kv span{opacity:.72;flex:none}.kv b{text-align:right;overflow-wrap:anywhere}
+.pass .err{color:#ffd0c8;min-height:2.4vh;font-size:1.7vh;margin-top:1vh}
+.go{width:100%;background:var(--warm);border-color:var(--warm);color:#3b2603;font-size:2.7vh;padding:1.5vh;border-radius:5vh;box-shadow:0 .8vh 2vh #0003;margin-top:.4vh}
+.go:hover:not(:disabled){background:#f5c577;border-color:#f5c577}
+@media (max-aspect-ratio:1/1){.lay{grid-template-columns:1fr}.pass{position:static}.pass:before,.pass:after{display:none}.mini{display:none}}
+</style></head><body><div id="app"></div>
+<div id="ft">&copy; 2026 RF Word Finder | Developed by AMSanjeev (Teach For India Fellow 2026&ndash;28)</div>
+<script>
+const $=s=>document.querySelector(s),app=$('#app');
+const fmt=n=>Number.isInteger(n)?String(n):n.toFixed(1);
+function toast(a,b){document.querySelectorAll('.pts').forEach(x=>x.remove());const e=document.createElement('div');e.className='pts';e.innerHTML=esc(a)+(b?'<small>'+esc(b)+'</small>':'');document.body.appendChild(e);setTimeout(()=>e.remove(),3300)}
+const r=(a,b)=>Math.floor(Math.random()*(b-a+1))+a,pick=a=>a[r(0,a.length-1)];
+const shuf=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const PR=[{"n":"Vowels","k":"w","p":[["Short a","a","Listen for the short /a/ sound in the middle.","cat map bag hat sad pan jam fan lamp crab flag stamp black snack basket magnet napkin backpack",[8,14]],["Short e","e","Listen for the short /e/ sound in the middle.","bed pen net hen red leg web ten nest belt desk sled help letter helmet dentist",[8,13]],["Short i","i","Listen for the short /i/ sound in the middle.","pig sit lip pin win dig kid big milk drip swim drink stick window kitten picnic",[8,13]],["Short o","o","Listen for the short /o/ sound in the middle.","dog hop pot mop box top fox job frog clock stomp block drop rocket pocket problem",[8,13]],["Short u","u","Listen for the short /u/ sound in the middle.","sun bug cup mud run hut jug gum duck drum trunk stuck plum rubber bucket puppet",[8,13]]]},{"n":"CVC words","k":"w","p":[["Mixed CVC","","Say each sound, then blend them: /m/ /a/ /p/ - map.","map sit hop bed cup pig dog sun hat pen web mix jug fit rub wax yak zip vet",[10,15]],["Word families","","Keep the ending the same and change the first sound.","cat mat sat bat fan can man cap map tap nap lap gap flat plan clap snap",[7,13]],["Look-alike words","","Check the first, middle and last sound one at a time.","pin pan pen big bag bug hot hit cut sit hat hut bit bet bat but",[6,12]]]},{"n":"Consonant blends","k":"w","p":[["Initial blends","str/spl/scr/spr/st/cl/fl/br/gr/tr/pl/sl/dr/fr/sw/sn/sp/gl","Say both sounds at the start. Do not drop either one.","stop clap frog drum trip plan slip grab swim snap spin clip glad string street splash scrub spring",[6,13]],["Final blends","nd/mp/lk/st/nt/ft/lt","Listen for both sounds at the end of the word.","hand milk jump nest tent gift belt sand lamp best melt pond lift plant stamp frost shift",[6,13]]]},{"n":"Digraphs","k":"w","p":[["sh","sh","The letters sh work together to make one sound: /sh/.","ship shop fish shed wish shut dish shell brush shark shelf crash fishing shadow shopping shampoo",[7,12]],["ch","ch","The letters ch work together to make one sound: /ch/.","chip chin chop much rich chat lunch chest chimp bench chick punch chicken children chimney champion",[6,12]],["th (/θ/ words)","th","The letters th work together to make one quiet sound: /th/ as in thin. Put the tongue gently between the teeth and blow air. It is not the buzzing sound in this or that.","thin thick think thank bath path math moth both tooth teeth cloth three throw thumb thorn thigh fifth tenth thud thief mouth month north south earth sloth thirty thirteen thirsty thunder thunderstorm Thursday healthy wealthy nothing something anything everything birthday bathtub bathroom bathmat toothpick toothpaste toothbrush pathfinder thousand toothache earthquake mouthwash pathway mammoth Thanksgiving thoughtful thankful thankless thickness thimble thermos thermometer athletic athlete mathematics thoroughly theory authority enthusiastic mathematician marathon arithmetic sympathy",[27,54]],["th (voiced /ð/)","th","The letters th also make a buzzing sound: /th/ as in this. Your voice buzzes while the tongue touches the teeth.","this that them then than with these those they there mother brother father other feather weather together another",[6,14]],["wh","wh","The letters wh work together to make the /w/ sound.","when whip which what whisk wheel white whale wheat whisper whistle whiskers whirlpool",[4,9]],["ph","ph","The letters ph work together to make the /f/ sound.","phone graph photo phonics dolphin nephew alphabet elephant telephone paragraph",[3,6]],["ck","ck","The letters ck work together to make the /k/ sound at the end.","duck sock back neck kick rock clock truck block stick quick rocket pocket jacket bucket",[6,11]]]},{"n":"Long vowels and teams","k":"w","p":[["Silent e","","The silent e at the end makes the vowel say its name.","cake kite bone cube make late hide home rope five gate nose bike tube snake pancake inside cupcake bedtime",[6,15]],["ai / ay","ai/ay","The vowel team ai or ay says /a/ as in rain.","rain mail day play stay paint snail tray train spray tail explain afraid mailbox holiday",[5,11]],["ee / ea","ee/ea","The vowel team ee or ea says /e/ as in seed.","seed feet tree bean meat team sheep beach green sleep sweet cheese teacher peanut beehive seaside",[6,12]],["oa / ow","oa/ow","The vowel team oa or ow says /o/ as in boat.","boat road soap goat snow grow bowl yellow coat float blow slow toast rainbow snowman elbow toaster",[7,13]]]},{"n":"R-controlled vowels","k":"w","p":[["ar","ar","The letters ar say /ar/ as in car.","car star farm park barn yard shark march cart start smart garden market carpet artist",[6,11]],["or","or","The letters or say /or/ as in corn.","corn fork born horn horse storm sport north short porch stork morning popcorn corner orbit",[4,11]],["er / ir / ur","er/ir/ur","The letters er, ir and ur all say /er/ as in bird.","fern bird girl turn burn hurt shirt nurse stir curl first butter number purple turtle",[6,11]]]},{"n":"Multisyllabic words","k":"w","p":[["Two syllables","","Break the word into parts, then read it smoothly.","sun+shine foot+ball pic+nic rab+bit pup+pet ten+nis win+dow pen+cil sis+ter cap+tain bas+ket gar+den pil+low hun+dred pic+ture bot+tle ex+press",[5,13]],["Three syllables","","Break the word into parts, then read it smoothly.","ba+na+na yes+ter+day but+ter+fly el+e+phant com+pu+ter re+mem+ber ex+cit+ing to+ma+to fan+tas+tic dif+fer+ent hos+pi+tal ex+cel+lent im+por+tant ad+ven+ture",[3,8]]]},{"n":"Phrases and sentences","k":"s","p":[["Phrases","","Read the words together in one smooth phrase.","a red hat|the big dog|a hot cup|ten fat pigs|the fast truck|a green frog|a shiny red ship|the chimp in the tree",[3,5]],["Sentences","","Group the words into meaningful chunks and pause at the full stop.","The ship is big.|We drank cold milk at lunch.|The frog jumps into the pond.|Ben ran fast to catch the bus.|The goat climbed up the steep road.|The shark swam past the small boat.|The sheep sleep in the green field.|She put a thick blanket on her bed.|The captain passed the ball to his teammate.",[3,6]]]},{"n":"Connected passages","k":"p","p":[["Short passages","","Read smoothly in phrases. Then think about what the passage said.","Sam has a red kite. The wind is strong today. Sam runs to the park to fly it.~Where does Sam go?|A little frog sat on a log. Splash! It jumped into the pond to swim with the fish.~What did the frog do?|Mia and Dev made a snow fort. It took them one hour. Then they drank hot milk.~What did they drink?|The team practised every day. On Saturday they played a big match. They won by three goals.~When was the match?|Dad cooked rice and beans for lunch. Everyone said it was tasty. The bowls were empty in ten minutes.~Why were the bowls empty?",[2,4]]]}];
+// ---------- audio ----------
+let ac,mg,fg,song=0,step=0,nextT=0,tmr,fxOn=true;
+function AU(){if(!ac){ac=new(window.AudioContext||window.webkitAudioContext)();mg=ac.createGain();mg.gain.value=.35;mg.connect(ac.destination);fg=ac.createGain();fg.gain.value=.9;fg.connect(ac.destination)}if(ac.state=='suspended')ac.resume();return ac}
+function osc(t,fr,d,ty,v,dest,f2){const o=ac.createOscillator(),g=ac.createGain();o.type=ty;o.frequency.setValueAtTime(fr,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+d);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(dest);o.start(t);o.stop(t+d+.02)}
+function noise(t,d,v,fr,dest,at){const n=ac.sampleRate*d,b=ac.createBuffer(1,n,ac.sampleRate),x=b.getChannelData(0);for(let i=0;i<n;i++)x[i]=Math.random()*2-1;const s=ac.createBufferSource(),fl=ac.createBiquadFilter(),g=ac.createGain();s.buffer=b;fl.type='bandpass';fl.frequency.value=fr;g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(v,t+(at||.01));g.gain.exponentialRampToValueAtTime(.001,t+d);s.connect(fl).connect(g).connect(dest);s.start(t)}
+function choir(t,fr,d,v){const g=ac.createGain(),bp=ac.createBiquadFilter();bp.type='bandpass';bp.frequency.value=750;bp.Q.value=2.5;g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(v,t+.06);g.gain.exponentialRampToValueAtTime(.001,t+d);[0,9,-9].forEach(c=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=fr;o.detune.value=c;o.connect(bp);o.start(t);o.stop(t+d+.05)});bp.connect(g).connect(mg)}
+function brass(t,n,d,v){const g=ac.createGain(),lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.setValueAtTime(400,t);lp.frequency.linearRampToValueAtTime(2200,t+.15);g.gain.setValueAtTime(.001,t);g.gain.linearRampToValueAtTime(v,t+.04);g.gain.exponentialRampToValueAtTime(.001,t+d);n.forEach(m=>{const o=ac.createOscillator();o.type='sawtooth';o.frequency.value=mf(m);o.connect(lp);o.start(t);o.stop(t+d+.05)});lp.connect(g).connect(mg)}
+function fx(n){if(!fxOn)return;try{AU();const t=ac.currentTime;
+if(n=='click')osc(t,700,.08,'square',.15,fg);
+if(n=='ok')[660,880].forEach((x,i)=>osc(t+i*.1,x,.2,'triangle',.22,fg));
+if(n=='bad'){osc(t,330,.25,'sine',.18,fg,250)}
+if(n=='kick'){osc(t,160,.15,'sine',.8,fg,50);noise(t,.1,.4,1500,fg)}
+if(n=='net')noise(t,.5,.5,3000,fg,.02);
+if(n=='post'){osc(t,620,.4,'square',.15,fg,500);noise(t,.15,.4,2500,fg)}
+if(n=='goal'){noise(t,2.8,.7,900,fg,.5);[523,659,784,1047,784,1047].forEach((x,i)=>osc(t+i*.13,x,.3,'sawtooth',.18,fg))}
+if(n=='assist')[659,784,988,1319].forEach((x,i)=>osc(t+i*.09,x,.3,'triangle',.22,fg));
+if(n=='whistle'){const o=ac.createOscillator(),l=ac.createOscillator(),lg=ac.createGain(),g=ac.createGain();o.frequency.value=2800;l.frequency.value=40;lg.gain.value=120;l.connect(lg).connect(o.frequency);g.gain.setValueAtTime(.3,t);g.gain.setValueAtTime(.3,t+.5);g.gain.exponentialRampToValueAtTime(.001,t+.6);o.connect(g).connect(fg);o.start(t);l.start(t);o.stop(t+.65);l.stop(t+.65)}
+}catch(e){}}
+const SONGS=[{n:'Stadium Stomp',bpm:112,k:[0,2,8,10],c:[4,12],h:[0,2,4,6,8,10,12,14],b:[48,0,0,48,0,0,50,0,52,0,0,52,0,0,55,0],m:[0,0,0,0,72,0,0,0,0,0,0,0,76,0,74,0]},
+{n:'Crowd Chant',bpm:104,k:[0,2,8,10],c:[4,12],h:[],b:[],m:[],w:1,v:[64,0,64,0,67,0,0,0,64,0,64,0,69,0,67,0]},
+{n:'Champions Anthem',bpm:116,k:[0,4,8,12],c:[4,12],h:[2,6,10,14],b:[],m:[],w:1,v:[0,0,0,0,69,0,72,0,76,0,0,0,74,0,72,0],p:[[57,60,64],[53,57,60],[48,52,55],[55,59,62]]}];
+const mf=m=>440*2**((m-69)/12);
+function tick(){const s=SONGS[song-1];if(!ac||!s)return;const d=60/s.bpm/2;
+while(nextT<ac.currentTime+.3){const t=nextT,i=step%16;
+if(s.k.includes(i))osc(t,150,.18,'sine',.9,mg,45);
+if(s.c.includes(i))noise(t,.12,.5,1800,mg);
+if(s.h.includes(i))noise(t,.04,.12,7000,mg);
+if(s.b[i])osc(t,mf(s.b[i]),d*1.6,'triangle',.4,mg);
+if(s.m[i])osc(t,mf(s.m[i]),d*1.5,'square',.07,mg);
+if(s.v&&s.v[i])choir(t,mf(s.v[i]),d*1.8,.14);
+if(s.p&&(i==0||i==8))brass(t,s.p[Math.floor(step/16)%s.p.length],d*7,.07);
+if(s.w&&i==0)noise(t,d*16,.16,600,mg,1);
+nextT+=d;step++}}
+function music(){clearInterval(tmr);if(song&&ac){nextT=ac.currentTime+.05;step=0;tmr=setInterval(tick,100)}}
+function songBtn(){AU();song=(song+1)%(SONGS.length+1);music();$('#bs').textContent='Music: '+(song?SONGS[song-1].n:'Off')}
+function fxBtn(b){fxOn=!fxOn;b.textContent='Effects: '+(fxOn?'On':'Off')}
+
+
+// ---------- accounts (saved on this device only) ----------
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}};
+// ---------- teacher sign-in (real Firebase Authentication; students can play without signing in) ----------
+let U=null,TOK=null,TEXP=0;
+async function fbPost(url,body,form){const r=await fetch(url,{method:'POST',headers:{'Content-Type':form?'application/x-www-form-urlencoded':'application/json'},body:form?body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error((j.error&&j.error.message)||'error '+r.status);return j}
+async function fbToken(){if(TOK&&Date.now()<TEXP)return TOK;const s=LS.get('wf_fbrt');if(!s)throw new Error('SIGNED_OUT');const j=await fbPost('https://securetoken.googleapis.com/v1/token?key='+FB.key,'grant_type=refresh_token&refresh_token='+encodeURIComponent(s.rt),true);TOK=j.id_token;TEXP=Date.now()+(+j.expires_in-60)*1000;s.rt=j.refresh_token||s.rt;LS.set('wf_fbrt',s);return TOK}
+function auth(){app.innerHTML=`<div class="auth"><div class="logo">Word <span>Finder</span></div><div class="tag">Find it. Read it. Score it!</div>
+<div class="card a"><div class="lbl">Teacher sign in</div><input id="ae" type="email" placeholder="Teacher email" autocomplete="email"><input id="ap" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key=='Enter')doAuth()">
+<div class="err" id="aerr"></div><button class="pri" style="font-size:2.4vh;padding:1.3vh" onclick="doAuth()">Sign in</button><button class="lnk" onclick="forgot()">Forgot password / first time? Get a password email</button><button class="lnk" onclick="guest()">Continue without signing in</button>
+<div class="fine">Sign in to see saved class results. Students can play without signing in, and their results are still saved with the class code.</div></div></div>`}
+async function doAuth(){const e=($('#ae').value||'').trim().toLowerCase(),p=$('#ap').value||'',er=$('#aerr');
+if(!/^\S+@\S+\.\S+$/.test(e))return er.textContent='Enter a valid email address.';if(!/@teachforindia\.org$/.test(e))return er.textContent='Use your @teachforindia.org email.';if(!p)return er.textContent='Enter your password.';er.textContent='Signing in...';
+try{const j=await fbPost('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+FB.key,{email:e,password:p,returnSecureToken:true});
+TOK=j.idToken;TEXP=Date.now()+(+j.expiresIn-60)*1000;const nm=j.displayName||e.split('@')[0];LS.set('wf_fbrt',{rt:j.refreshToken,email:e,name:nm});U={email:e,name:nm};setup()}
+catch(x){const m=x.message||'';er.textContent=/INVALID_LOGIN|INVALID_PASSWORD|EMAIL_NOT_FOUND|INVALID_EMAIL/.test(m)?'Email or password is not right.':/TOO_MANY/.test(m)?'Too many tries. Wait a few minutes and try again.':/OPERATION_NOT_ALLOWED|PASSWORD_LOGIN_DISABLED/.test(m)?'Email sign-in is not turned on in Firebase yet.':/USER_DISABLED/.test(m)?'This account is disabled.':/referer|referrer/i.test(m)?'This website is not allowed to use the sign-in key yet. Add it in Google Cloud > Credentials > Website restrictions, then wait 5 minutes.':/Failed to fetch|NetworkError/i.test(m)?'Could not reach the sign-in service. Check the internet.':'Could not sign in ('+m+').'}}
+async function forgot(){const e=($('#ae').value||'').trim().toLowerCase(),er=$('#aerr');if(!/^\S+@teachforindia\.org$/.test(e))return er.textContent='Type your @teachforindia.org email above first.';er.textContent='Sending...';
+try{await fbPost('https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key='+FB.key,{requestType:'PASSWORD_RESET',email:e});er.textContent='Password email sent. Open it, set your password, then sign in here.'}
+catch(x){const m=x.message||'';er.textContent=/EMAIL_NOT_FOUND/.test(m)?'No teacher account for this email yet. Ask the admin to add it.':/referer|referrer/i.test(m)?'This website is not allowed to use the key yet (check Website restrictions).':'Could not send the email ('+m+').'}}
+function guest(){U=null;setup()}
+function signOut(){LS.set('wf_fbrt',null);TOK=null;U=null;auth()}
+// ---------- teacher results screen (read from the class database; needs a signed-in teacher) ----------
+let RS=[];const dstr=x=>x.playedAt?new Date(x.playedAt).toLocaleDateString():'';
+const fsOut=v=>'stringValue' in v?v.stringValue:'integerValue' in v?+v.integerValue:'doubleValue' in v?v.doubleValue:'booleanValue' in v?v.booleanValue:'timestampValue' in v?v.timestampValue:'arrayValue' in v?(v.arrayValue.values||[]).map(fsOut):'mapValue' in v?fsRead(v.mapValue.fields||{}):null;
+const fsRead=f=>Object.fromEntries(Object.entries(f).map(([k,v])=>[k,fsOut(v)]));
+function resultsView(){if(!U)return;modal(`<div class="ans" style="font-size:3.4vh">Class results</div><div class="row"><input id="rc" maxlength="9" placeholder="Class code" value="${esc(CODE)}" onkeydown="if(event.key=='Enter')loadResults()"><button class="pri" onclick="loadResults()">Show results</button><button onclick="closeM()">Close</button></div><div class="fine" id="rm">Enter the class code. Leave it empty to see games played without a class code.</div><div id="rbody" style="width:100%;display:flex;flex-direction:column;gap:1.3vh;align-items:center"></div>`)}
+async function loadResults(){const c=($('#rc').value||'').toUpperCase().replace(/[^A-Z0-9]/g,''),m=$('#rm');m.textContent='Loading...';$('#rbody').innerHTML='';
+try{const t=await fbToken(),r=await fetch(`https://firestore.googleapis.com/v1/projects/${FB.project}/databases/(default)/documents:runQuery`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+t},body:JSON.stringify({structuredQuery:{from:[{collectionId:'results'}],where:{fieldFilter:{field:{fieldPath:'classCode'},op:'EQUAL',value:{stringValue:c}}},limit:1000}})});
+if(r.status==401){m.textContent='Your sign-in has expired. Please sign out and sign in again.';return}
+if(r.status==403){m.textContent='Not allowed. Use a verified @teachforindia.org account (set your password through the password email to verify it) and make sure the Firestore rules are published.';return}
+if(!r.ok){m.textContent='Could not load results (error '+r.status+').';return}
+RS=(await r.json()).filter(x=>x.document).map(x=>fsRead(x.document.fields)).sort((a,b)=>(b.playedAt||'').localeCompare(a.playedAt||''));
+m.textContent=RS.length?RS.length+' hunts found'+(c?' for class code '+c:' without a class code')+'.':'No results saved for that code yet.';if(RS.length)resView()}
+catch(e){m.textContent=e.message=='SIGNED_OUT'?'Please sign in again.':/Failed to fetch|NetworkError/i.test(e.message)?'Could not reach the database. Check the internet.':'Could not load results ('+e.message+').'}}
+function resView(){const dEl=$('#rd2'),d=dEl?dEl.value:'',rows=d?RS.filter(x=>dstr(x)==d):RS,ds=[...new Set(RS.map(dstr))],stu=new Set(rows.map(x=>x.student)).size,avg=k=>rows.length?Math.round(rows.reduce((a,x)=>a+(+x[k]||0),0)/rows.length*10)/10:0;
+const W={};rows.forEach(x=>(x.items||[]).forEach(t=>{const w=W[t.word]=W[t.word]||{n:0,h:0};w.n++;if(!t.readFirstTry||t.hintUsed)w.h++}));
+const hw=Object.entries(W).filter(([,v])=>v.n>=2&&v.h).sort((a,b)=>b[1].h/b[1].n-a[1].h/a[1].n||b[1].n-a[1].n).slice(0,8);
+$('#rbody').innerHTML=`<div class="row"><select id="rd2" onchange="resView()"><option value="">All dates</option>${ds.map(x=>`<option${x==d?' selected':''}>${esc(x)}</option>`).join('')}</select></div>
+<div class="st"><div><b>${rows.length}</b><small>Hunts played</small></div><div><b>${stu}</b><small>Students</small></div><div><b>${fmt(avg('score'))}</b><small>Average score</small></div><div><b>${Math.round(avg('firstTryAccuracy'))}%</b><small>Read first try</small></div></div>
+<div class="nt"><b>Words that needed the most help:</b> ${hw.length?hw.map(([w,v])=>esc(w)+' ('+v.h+' of '+v.n+')').join(', '):'not enough data yet'}</div>
+<div class="hist">${rows.map(x=>`<div><span><b>${esc(x.student)}</b> ${x.team?'('+esc(x.team)+') ':''}| ${esc(dstr(x))}</span><span>${fmt(+x.score||0)} pts | ${x.wordsFound}/${x.wordsTotal} found | ${x.firstTryAccuracy}% first try | hints ${x.hintPresses} | wrong taps ${x.wrongTries} <button onclick="resOne(${RS.indexOf(x)})">Details</button></span></div>`).join('')}</div>`}
+function resOne(i){const x=RS[i],lab=t=>t.readResult=='notFound'?'Not found':(ST[t.readResult]||t.readResult);
+$('#rbody').innerHTML=`<div class="ans" style="font-size:3vh">${esc(x.student)}: ${fmt(+x.score||0)} points</div><div class="fine">${esc(x.progression)} (${esc((x.patterns||[]).join(', '))}) | ${esc(x.difficulty)} | ${esc(dstr(x))} | ${Math.floor((x.durationSec||0)/60)}:${String((x.durationSec||0)%60).padStart(2,'0')} | wrong taps ${x.wrongTries}, decoys tapped ${x.decoyTaps}</div>
+<div class="hist">${(x.items||[]).map(t=>`<div><span><b>${esc(t.word)}</b></span><span>${t.found?'Found'+(t.foundAfterSec!=null?' in '+t.foundAfterSec+'s':''):'Not found'} | ${esc(lab(t))} | read attempts ${t.readAttempts} | ${t.hintUsed?'hint used ('+t.hintSteps+')':'no hint'} | ${fmt(+t.discoveryPts+ +t.readingPts||0)} pts</span></div>`).join('')}</div><button onclick="resView()">Back to list</button>`}
+
+// ---------- content: grid progressions come from the word bank; text hunts use these short texts ----------
+const TX=[
+{n:'Beach',t:'Josh and his mother went to the beach. They shared a thick sandwich with cheese. Then Josh chased a shiny shell on the sand.',ph:[['to the beach','Find the phrase that tells where Josh and his mother went.'],['a thick sandwich','Find the phrase that tells what they shared.'],['a shiny shell','Find the phrase that tells what Josh chased.']],sc:['Find the sentence that tells where they went.','Find the sentence about the food.','Find the sentence about the shell.']},
+{n:'Farm',t:'Mark parked the car near the barn. A horse stood in the dark yard. The storm was far north, so the farm was safe.',ph:[['near the barn','Find the phrase that tells where Mark parked the car.'],['in the dark yard','Find the phrase that tells where the horse stood.'],['far north','Find the phrase that tells where the storm was.']],sc:['Find the sentence about the car.','Find the sentence about the horse.','Find the sentence about the storm.']},
+{n:'Rain',t:'Rain fell on the train all day. Dee and Jean ate peas and beans at the beach. Then a boat sailed to the coast.',ph:[['all day','Find the phrase that tells how long the rain fell.'],['peas and beans','Find the phrase that tells what Dee and Jean ate.'],['to the coast','Find the phrase that tells where the boat sailed.']],sc:['Find the sentence about the rain.','Find the sentence about the food.','Find the sentence about the boat.']},
+{n:'Cat',t:'The thin cat sat on a thick log. Three thrushes sang with the cat. Then the cat ran to the bath.',ph:[['on a thick log','Find the phrase that tells where the cat sat.'],['Three thrushes','Find the phrase that tells which birds sang.'],['to the bath','Find the phrase that tells where the cat ran.']],sc:['Find the sentence about the log.','Find the sentence about the birds.','Find the sentence about the bath.']}];
+const PD=[['sh',0,'sh'],['ch',0,'ch'],['ar',1,'ar'],['or',1,'or'],['ai / ay',2,'ai|ay'],['ee / ea',2,'ee|ea'],['oa',2,'oa'],['th',3,'th']];
+const PG=PR.filter(p=>p.k=='w').concat([{n:'Phrase Hunt',k:'t',tk:'ph',p:TX.map((x,i)=>[x.n+' text','','',i])},{n:'Sentence Hunt',k:'t',tk:'sc',p:TX.map((x,i)=>[x.n+' text','','',i])},{n:'Passage Detective',k:'t',tk:'pd',p:PD.map(x=>[x[0],'','',x[1],x[2]])}]);
+const TIPS={ph:'Read the words together as one smooth phrase.',sc:'Read the sentence smoothly. Pause at the full stop.',pd:'Look at the highlighted letters, then blend the word.'};
+const DF={easy:'Easy',standard:'Standard',challenge:'Challenge'};
+const DIRS={easy:[[0,1]],standard:[[0,1],[1,0]],challenge:[[0,1],[1,0],[1,1],[1,-1]]};
+const ST={first:'First attempt',retry:'After a retry',model:'After a model',review:'Needs review',skip:'Skipped',a:'',b:''};
+let S={am:'manual',ac:5,wl:'',tm:0,mode:'solo',names:[],prog:1,pats:new Set([0]),df:'standard',cnt:10,hints:true,decoy:true,specs:[],pool:[]},G=null;
+const wordsOf=P=>P[3].split(' ');
+// ---------- class data (same Firebase project as the other classroom games) ----------
+const FB={project:'maths-penalty-cup',key:'AIzaSyAMsz-GB8WmGNUYjod6fquQJMYBQPJeOGs'};let CLS={},CN='',CODE='',cm='';
+try{CODE=localStorage.getItem('pk_code')||'';CN=localStorage.getItem('nb_cn')||'';CLS={...JSON.parse(localStorage.getItem('pk_lib')||'{}'),...JSON.parse(localStorage.getItem('nb_cls')||'{}')};if(!CLS[CN])CN=Object.keys(CLS)[0]||''}catch(e){}
+const ros=()=>{const c=CLS[CN];return c&&c.g?c.g.slice(0,c.n||c.g.length).map(g=>({name:g.name||'Team',pl:(g.txt||'').split(/[,\n]/).map(x=>x.trim()).filter(Boolean)})).filter(t=>t.pl.length):[]};
+const lvOf=n=>/eagle/i.test(n)?'easy':/tiger|lion/i.test(n)?'adv':'mix';
+const LV=()=>(LS.get('wf_lv')||{})[CN]||{},lvFor=n=>LV()[n]||lvOf(n);
+const lvTxt=l=>l=='easy'?'basic words':l=='adv'?'medium and hard words':'mixed words';
+function setLv(i,v){const n=ros()[i].name,a=LS.get('wf_lv')||{};a[CN]=a[CN]||{};if(v)a[CN][n]=v;else delete a[CN][n];LS.set('wf_lv',a);setup()}
+function setMode(m){S.am=m;LS.set('wf_mode',m);if(m=='manual')S.order=null;setup();if(m=='auto'&&CODE&&!Object.keys(CLS).length)loadCode(CODE)}
+function pickCls(v){CN=v;try{localStorage.setItem('nb_cn',v)}catch(e){}setup()}
+async function loadCode(c){c=(c||'').toUpperCase().replace(/[^A-Z0-9]/g,'');CODE=c;const rf=()=>{if(!G&&S.am=='auto'&&$('.setup'))setup()};if(c.length!=8){cm='A class code has 8 letters and numbers.';return rf()}cm='Loading class...';rf();
+try{const r=await fetch(`https://firestore.googleapis.com/v1/projects/${FB.project}/databases/(default)/documents/classes/${c}?key=${FB.key}`);if(!r.ok){cm=r.status==404?'Code not found. Check it and try again.':'Could not load the class (error '+r.status+').';return rf()}
+const j=await r.json();CLS=JSON.parse(j.fields.lib.stringValue);const ks=Object.keys(CLS);if(!CLS[CN])CN=ks[0]||'';cm=ks.length?'Class loaded.':'That code has no classes yet.';try{localStorage.setItem('pk_code',c);localStorage.setItem('nb_cn',CN);localStorage.setItem('nb_cls',JSON.stringify(CLS))}catch(e){}}
+catch(e){cm='Could not reach the class database. Using the saved class if there is one.'}rf()}
+function clsHTML(){const ks=Object.keys(CLS),T=ros();return `<div class="sec"><div class="lbl">Class</div><div class="row"><input id="cc" maxlength="9" placeholder="Class code" value="${esc(CODE)}" onkeydown="if(event.key=='Enter')loadCode($('#cc').value)"><button class="pri" onclick="loadCode($('#cc').value)">Load class</button>${ks.length>1?`<select onchange="pickCls(this.value)">${ks.map(k=>`<option${k==CN?' selected':''}>${esc(k)}</option>`).join('')}</select>`:''}</div><div class="fine">${esc(cm)||(ks.length?'Saved class ready.':'Enter the class code from your other classroom games.')}</div>${T.length?`<div class="row">${T.map((t,i)=>`<span class="fine"><b>${esc(t.name)}</b> (${t.pl.length}) <select onchange="setLv(${i},this.value)">${[['','Auto: '+lvTxt(lvOf(t.name))],['easy','Basic words'],['adv','Medium and hard words'],['mix','Mixed words']].map(o=>`<option value="${o[0]}"${(LV()[t.name]||'')==o[0]?' selected':''}>${o[1]}</option>`).join('')}</select></span>`).join('')}</div>`:''}</div>`}
+
+// ---------- save every student's results to the class database (Firestore "results" collection) ----------
+const FS_URL=`https://firestore.googleapis.com/v1/projects/${FB.project}/databases/(default)/documents/results?key=${FB.key}`;
+const fsVal=v=>v==null?{nullValue:null}:typeof v=='boolean'?{booleanValue:v}:typeof v=='number'?(Number.isInteger(v)?{integerValue:String(v)}:{doubleValue:v}):typeof v=='string'?{stringValue:v}:Array.isArray(v)?{arrayValue:{values:v.map(fsVal)}}:{mapValue:{fields:Object.fromEntries(Object.entries(v).filter(([,x])=>x!==undefined).map(([k,x])=>[k,fsVal(x)]))}};
+function dbMsg(t,keep){let e=$('#dbs');if(!e){e=document.createElement('div');e.id='dbs';e.style.cssText='position:fixed;left:1.2vh;bottom:1.2vh;z-index:9999;background:#fff;border:1px solid var(--line);border-radius:1.2vh;padding:.7vh 1.4vh;font-size:1.7vh;font-weight:600;box-shadow:0 2px 10px rgba(0,0,0,.12);pointer-events:none';document.body.appendChild(e)}e.textContent=t;clearTimeout(e._t);if(!keep)e._t=setTimeout(()=>e.remove(),4000)}
+async function fsSend(p){const f=fsVal(p).mapValue.fields;f.playedAt={timestampValue:p.playedAt};const r=await fetch(FS_URL+'&documentId='+encodeURIComponent(p.id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fields:f})});if(r.ok||r.status==409)return true;const e=new Error('http');e.code=r.status;throw e}
+let flushing=false;
+async function flushOutbox(){if(flushing)return;flushing=true;let q=LS.get('wf_outbox')||[],left=[],code=0;for(const p of q){try{await fsSend(p)}catch(e){left.push(p);code=e.code||'offline'}}flushing=false;LS.set('wf_outbox',left.slice(-200));
+if(q.length){if(!left.length)dbMsg('Results saved to the class database');else dbMsg('Not saved yet ('+(code=='offline'?'no internet':'error '+code)+'). Kept on this device and will retry.',true)}}
+function saveResult(c){if(!S.save)return;const au=!!(G.auto&&S.order),R=G.tg,sum=k=>R.reduce((a,t)=>a+(t[k]||0),0),ok=t=>t.st=='first'||t.st=='retry'||t.st=='model',id='wf'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const p={id,game:'rf-word-finder',v:1,source:au?'class':'manual',sessionId:au?S.sid:id,classCode:au?CODE:'',className:au?CN:'',team:au?S.T[S.order[S.ti].t].name:'',student:(G.names[0]||'').trim(),round:au?S.ti+1:1,teacher:U?U.name:'',
+progression:G.prog,patterns:G.pats,difficulty:DF[G.df],hintsEnabled:!!G.hints,timerSec:G.tm||0,
+score:G.sc[0],discoveryPts:sum('dis'),readingPts:sum('rd'),bonusPts:G.bonus||0,wordsTotal:R.length,wordsFound:c.fc,wordsNotFound:R.length-c.fc,readFirstTry:c.first,readAfterRetry:c.retry,readAfterModel:c.model,needsReview:c.review,firstTryAccuracy:c.acc,
+wrongTries:G.wrong||0,decoyTaps:G.decoy||0,hintPresses:G.hn||0,wordsWithHint:R.filter(t=>t.hinted).length,durationSec:Math.round(elapsed()/1000),completed:c.fc==c.tot,playedAt:new Date().toISOString(),
+items:R.map(t=>({word:short(t.w,60),pattern:G.kind=='grid'?PG[G.pidx].p[t.pi][0]:(G.pats[0]||''),found:!!t.found,foundAfterSec:t.found?t.ft:null,hintUsed:!!t.hinted,hintSteps:t.hc||0,discoveryPts:t.dis||0,readingPts:t.rd||0,readResult:t.found?(t.st||'none'):'notFound',readAttempts:t.found?(t.ra||0):0,readCorrect:ok(t),readFirstTry:t.st=='first'}))};
+const q=LS.get('wf_outbox')||[];q.push(p);LS.set('wf_outbox',q);dbMsg('Saving results...',true);flushOutbox()}
+// ---------- puzzle generator (bounded retries, validates every target) ----------
+function gen(ws,df,dc){const dirs=DIRS[df],maxL=Math.max(...ws.map(w=>w.length),...dc.map(w=>w.length)),base={easy:6,standard:8,challenge:10}[df];
+for(let size=Math.max(base,maxL+1);size<Math.max(base,maxL+1)+7;size++){for(let tr=0;tr<25;tr++){
+const g=Array.from({length:size},()=>Array(size).fill('')),place=w=>{for(let a=0;a<250;a++){const d=pick(dirs),r0=r(0,size-1),c0=r(0,size-1),r1=r0+d[0]*(w.length-1),c1=c0+d[1]*(w.length-1);if(r1<0||r1>=size||c1<0||c1>=size)continue;
+let ok=true;for(let i=0;i<w.length;i++){const v=g[r0+d[0]*i][c0+d[1]*i];if(v&&v!==w[i]){ok=false;break}}if(!ok)continue;const p=[];for(let i=0;i<w.length;i++){g[r0+d[0]*i][c0+d[1]*i]=w[i];p.push([r0+d[0]*i,c0+d[1]*i])}return p}return null};
+const pos=new Map();let ok=true;for(const w of [...new Set(ws)].sort((a,b)=>b.length-a.length)){const p=place(w);if(!p){ok=false;break}pos.set(w,[p])}if(!ok)continue;
+const dp=[];dc.forEach(w=>{const p=place(w);if(p)dp.push(p)});
+for(let i=0;i<size;i++)for(let j=0;j<size;j++)if(!g[i][j])g[i][j]='abcdefghijklmnopqrstuvwxyz'[r(0,25)];
+let valid=true;for(const [w,ps] of pos){for(let i=0;i<size;i++)for(let j=0;j<size;j++)for(const d of dirs){const e=[i+d[0]*(w.length-1),j+d[1]*(w.length-1)];if(e[0]<0||e[0]>=size||e[1]<0||e[1]>=size)continue;let m=true;for(let k=0;k<w.length;k++)if(g[i+d[0]*k][j+d[1]*k]!==w[k]){m=false;break}
+if(m&&!ps.some(p=>p[0][0]==i&&p[0][1]==j&&p[p.length-1][0]==e[0]&&p[p.length-1][1]==e[1])){const p=[];for(let k=0;k<w.length;k++)p.push([i+d[0]*k,j+d[1]*k]);ps.push(p)}}
+if(ps.length>3){valid=false;break}}
+if(!valid)continue;return{n:size,grid:g.map(x=>x.join('')),paths:pos,dec:dp}}}return null}
+// ---------- setup, preview, rules ----------
+function setup(){const e=document.querySelector('.setup'),t=e?e.scrollTop:0;setup0();const n=document.querySelector('.setup');if(n)n.scrollTop=t}
+function setup0(){closeM();G=null;const pg=PG[S.prog],sv=LS.get('wf_session'),text=pg.k=='t',au=S.am=='auto',pd=pg.tk=='pd';
+const seg=(a,cur,f)=>`<div class="seg">${a.map(o=>`<button class="${cur===o[0]?'on':''}" onclick="${f(o[0])}">${o[1]}</button>`).join('')}</div>`;
+const ctl=(l,h,b)=>`<div class="ctl"><div class="cl">${l}</div>${b}${h?`<div class="ch">${h}</div>`:''}</div>`;
+const OO=[[true,'On'],[false,'Off']],T=ros(),nStu=T.reduce((a,t)=>a+t.pl.length,0),pats=[...S.pats].map(i=>pg.p[i][0]),wc=au?S.ac:S.cnt;
+const dfd={easy:'Words run across only. No decoy words.',standard:'Words run across and down. Decoy words appear.',challenge:'Across, down and diagonal on a bigger grid.'};
+const kv=(a,b)=>`<div class="kv"><span>${a}</span><b>${b}</b></div>`;
+const mini='KSTOPBMCFINDLRAHUGEQWZVJYXOP'.split('').map((c,i)=>`<i class="${i>=8&&i<=11?'hit':''}">${c}</i>`).join('');
+app.innerHTML=`<div class="hdr"><div class="brand">Word <span>Finder</span></div><div class="row">${sv?'<button class="pri" onclick="resume()">Resume saved session</button>':''}${U?`<span class="fine">${esc(U.name)}</span><button class="ghost" onclick="resultsView()">Class results</button><button class="ghost" onclick="history_()">Saved records</button><button class="ghost" onclick="signOut()">Sign out</button>`:`<span class="fine">Guest</span><button class="ghost" onclick="auth()">Sign in</button>`}</div></div>
+<div class="setup v2"><div class="hero"><div><span class="pill">${au?'CLASS HUNT SETUP':'QUICK HUNT SETUP'}</span><h1>Configure <span>Word Finder</span></h1><p>Find it. Read it. Score it! Choose who plays, what they read and how the hunt runs.</p></div><div class="mini">${mini}</div></div>
+<div class="lay"><div>
+<section class="s2"><div class="sh2"><div class="sn">1</div><div><h2>Who is playing</h2><p>${au?'The game calls one student at a time, at random.':'One student hunts for words while you listen.'}</p></div></div>
+<div class="gl">Mode</div>${seg([['manual','Manual'],['auto','Auto (class)']],S.am,v=>`setMode('${v}')`)}
+<div class="gl">${au?'Class':'Student name'}</div>${au?clsHTML():`<div class="row"><input maxlength="16" placeholder="Type the student name" value="${esc(S.names[0]||'')}" oninput="S.names[0]=this.value;const e=$('#sStu');if(e)e.textContent=this.value.trim()||'Not set'"></div>`}</section>
+<section class="s2"><div class="sh2"><div class="sn">2</div><div><h2>What to read</h2><p>Pick the reading skill, then the pattern${text&&!pd?' or text':''} to practise.</p></div></div>
+<div class="gl">RF progression</div><div class="tiles">${PG.map((p,i)=>`<button class="tile ${S.prog==i?'on':''}" onclick="S.prog=${i};S.pats=new Set([0]);setup()">${p.n}<small>${p.k=='w'?'Word search':p.tk=='ph'?'Text hunt: phrases':p.tk=='sc'?'Text hunt: sentences':'Text hunt: patterns'}</small></button>`).join('')}</div>
+<div class="gl">${text?(pd?'Pattern to detect':'Text'):'Target patterns (one or more)'}</div><div class="chks">${pg.p.map((p,i)=>`<button class="chk ${S.pats.has(i)?'on':''}" onclick="togP(${i})"><i></i>${esc(p[0])}</button>`).join('')}</div></section>
+<section class="s2"><div class="sh2"><div class="sn">3</div><div><h2>How the hunt runs</h2><p>Difficulty, length, timer and whether results are kept.</p></div></div>
+<div class="gl">Difficulty</div><div class="tiles">${Object.keys(DF).map(k=>`<button class="tile ${S.df==k?'on':''}" onclick="S.df='${k}';setup()">${DF[k]}<small>${dfd[k]}</small></button>`).join('')}</div>
+<div class="cg">${text?'':ctl(au?'Words per student':'Target words','',seg((au?[3,5,8]:[5,10,15]).map(k=>[k,k]),wc,v=>`${au?'S.ac':'S.cnt'}=${v};setup()`))}
+${text||au?'':ctl('Word level','Filter the word bank.',seg([['','All'],['e','Easy'],['m','Medium'],['h','Hard']],S.wl,v=>`S.wl='${v}';setup()`))}
+${ctl('Timer',S.tm?'Pauses while a word is being read.':'',seg([[0,'Off'],[30,'30s'],[60,'60s'],[90,'90s'],[120,'2 min']],S.tm,v=>`S.tm=${v};LS.set('wf_tm',S.tm);setup()`))}
+${ctl('Hints and retries','Hints give half discovery points.',seg(OO,!!S.hints,v=>`S.hints=${v};setup()`))}
+${ctl('Save results','Saves to the class database.',seg(OO,!!S.save,v=>`S.save=${v};LS.set('wf_save',${v});setup()`))}
+${text?'':ctl('Decoy words','Real words that are not targets.',seg(OO,!!S.decoy,v=>`S.decoy=${v};setup()`))}</div></section>
+</div>
+<aside class="pass"><div class="k">Hunt pass</div><h3>${esc(pg.n)}</h3><div class="pp">${esc(pats.join(', '))}</div>
+${kv('Mode',au?'Class hunt':'Single student')}${au?kv('Class',esc(CN||'Not loaded')+(nStu?' ('+nStu+' students)':'')):kv('Student','<span id="sStu">'+(esc((S.names[0]||'').trim())||'Not set')+'</span>')}${kv('Difficulty',DF[S.df])}${kv('Length',text?(pd?'Every matching word':'Every clue'):wc+(au?' words each':' words'))}${kv('Timer',S.tm?(S.tm>=120?'2 min':S.tm+'s'):'Off')}${kv('Hints',S.hints?'On':'Off')}${kv('Results',S.save?'Saved':'Not saved')}
+<div class="err" id="err"></div><button class="go" onclick="useCfg()">Use this configuration</button></aside></div></div>`}
+function togP(i){const t=PG[S.prog].k=='t';if(t)S.pats=new Set([i]);else if(S.pats.has(i)){if(S.pats.size>1)S.pats.delete(i)}else S.pats.add(i);setup()}
+function pool(){const pg=PG[S.prog],seen=new Set(),o=[];[...S.pats].forEach(pi=>{const P=pg.p[pi],W=wordsOf(P),E=P[4]?P[4][0]:Math.ceil(W.length/3),M=P[4]?P[4][1]:Math.ceil(2*W.length/3);W.forEach((w,i)=>{const d=w.replace(/\+/g,'');if(!seen.has(d)){seen.add(d);o.push({w,pi,t:i<E?'e':i<M?'m':'h'})}})});const f=S.wl?o.filter(x=>x.t==S.wl):o;return shuf(f.length>=3?f:o)}
+function useCfg(){if(S.am=='auto'){if(!ros().length){$('#err').textContent='Please load a class first.';return}AU();return rules()}const n=1,nm=S.names.slice(0,n).map(x=>(x||'').trim());if(nm.length<n||nm.some(x=>!x)){$('#err').textContent='Please enter the student name.';return}S.names=nm;AU();
+if(PG[S.prog].k=='w'){S.pool=pool();S.specs=S.pool.slice(0,Math.min(S.cnt,S.pool.length));S.pool=S.pool.slice(S.specs.length)}preview()}
+function preview(){const pg=PG[S.prog],text=pg.k=='t';
+app.innerHTML=`<div class="setup"><div class="title" style="font-size:4vh">Preview ${text?'the hunt':'and edit the words'}</div>
+${text?`<div class="q2" style="font-size:2.6vh;color:var(--mut)">${esc(pg.n)}: ${esc([...S.pats].map(i=>pg.p[i][0]).join(', '))}. All clues, phrases or words from this text will be used.</div>`:`<div class="pv">${S.specs.map((s,i)=>`<div>${esc(s.w.replace(/\+/g,''))}<button onclick="repl(${i})">Replace</button><button onclick="rem(${i})">Remove</button></div>`).join('')}</div><div class="fine">${S.specs.length} words. Replace swaps in another word with the same pattern.</div>`}
+<div class="row"><button style="font-size:2.4vh" onclick="setup()">Back</button><button class="pri big" style="font-size:2.8vh" onclick="rules()">Continue to rules</button></div></div>`}
+function repl(i){if(!S.pool.length)return;S.specs[i]=S.pool.shift();preview()}
+function rem(i){if(S.specs.length<=3)return;S.specs.splice(i,1);preview()}
+function rules(){const g=!!G;
+modal(`<div class="ans" style="font-size:3.4vh">Mission: ${esc(PG[S.prog].n)}</div><div class="rg">
+<div><h3>How to play</h3>1. Search the puzzle for a hidden word.<br>2. Tap the letters in order, or drag across them, then press Check word.<br>3. The word appears in a big reading card.<br>4. The student reads it aloud and the teacher confirms.<br>5. Find every target to finish the mission.</div>
+<div><h3>Points</h3><b>Discover a word:</b> +5 (half, +2.5, if a hint was used)<br><b>Read it first try:</b> +5<br><b>After a retry:</b> +3<br><b>After a model or hint:</b> +2<br><b>Find and read every word:</b> +10 bonus<br>No points are ever taken away.</div>
+<div><h3>Teacher buttons</h3><b>Read correctly:</b> confirms the reading.<br><b>Try again:</b> shows a hint, then a model.<br><b>Not yet:</b> saves the word for review.<br><b>Skip for now:</b> leaves it out of accuracy.<br><b>Hint:</b> makes the next missing word glow. That word earns half discovery points.<br><b>Finish hunt:</b> ends the round early and saves the missed words.<br>Pause hides the puzzle until you resume.</div>
+${S.am=='auto'&&!g?'<div><h3>Class mode</h3>The game calls one student at a time, at random, team by team, and shows the team and name first. The student presses I am ready, then hunts for their words. Every student gets one turn, so the number of rounds equals the number of students. Team points are added up. Each team has its own word level.</div>':''}<div><h3>Fair play</h3>Finding a word is not the same as reading it, so reading is always checked. Speed is not scored.${S.tm?' The countdown timer is optional. It pauses while a word is being read, and the hunt ends when time is up.':' There is no timer.'} Decoy words are real words that are not targets. The report is for the teacher only.</div></div>
+<button class="pri big" style="font-size:2.8vh;padding:1.1vh 4vh" onclick="${g?'closeM()':S.am=='auto'?'beginAuto()':'begin()'}">${g?'Back to game':S.am=='auto'?'Start the class':'Start the hunt'}</button>`)}
+// ---------- build a game ----------
+function begin(specs){closeM();AU();music();fx('whistle');const pg=PG[S.prog],n=1;
+G={mode:'solo',names:S.names.slice(0,n),df:S.df,hints:S.hints,prog:pg.n,pats:[...S.pats].map(i=>pg.p[i][0]),pidx:S.prog,kind:pg.k=='w'?'grid':'text',sc:[0,0],turn:0,el:0,t0:Date.now(),paused:false,cur:null,rs:null,msg:'',bonus:0,tg:[],round:(G&&G.round||0)+1,auto:S.am=='auto'&&!!S.order,tm:S.tm,tl:S.tm*1000,tk:null};
+if(G.kind=='grid'){const sp=specs||S.specs,ws=sp.map(s=>s.w.replace(/\+/g,'')),ex=new Set(ws);let dc=[];
+if(S.decoy&&S.df!='easy'){const all=[];PG[S.prog].p.forEach((P,pi)=>{if(!S.pats.has(pi)||PG[S.prog].p.length==1)wordsOf(P).forEach(w=>{const d=w.replace(/\+/g,'');if(!ex.has(d)&&d.length<=7)all.push(d)})});dc=shuf(all).slice(0,3)}
+const o=gen(ws,S.df,dc);if(!o)return alert('Could not build a puzzle. Please try again.');
+G.n=o.n;G.grid=o.grid;G.dec=o.dec;G.tg=sp.map((s,i)=>({id:i,w:ws[i],seg:s.w.split('+').join(' + '),pi:s.pi,found:false,dis:0,rd:0,st:'',tm:0,paths:o.paths.get(ws[i]),fp:null}))}
+else{const tk=pg.tk,P=pg.p[[...S.pats][0]],tx=TX[P[3]],tk0=toks(tx.t);G.tx=P[3];G.tk=tk;G.rx=P[4]||'';
+if(tk=='ph')G.tg=tx.ph.map((x,i)=>{const a=x[0].toLowerCase().split(' '),s=tk0.findIndex((_,j)=>a.every((w,k)=>tk0[j+k]&&tk0[j+k].n==w));return{id:i,w:x[0],clue:x[1],rg:[s,s+a.length-1],found:false,dis:0,rd:0,st:'',tm:0}});
+else if(tk=='sc')G.tg=sents(tx.t).map((x,i)=>({id:i,w:x.text,clue:tx.sc[i],rg:[x.a,x.b],found:false,dis:0,rd:0,st:'',tm:0}));
+else{const re=new RegExp(G.rx,'i'),m=new Map();tk0.forEach((t,j)=>{if(t.n!='the'&&re.test(t.n)){if(!m.has(t.n))m.set(t.n,[]);m.get(t.n).push(j)}});G.tg=[...m].map(([w,ix],i)=>({id:i,w,idx:ix,found:false,dis:0,rd:0,st:'',tm:0}))}}
+sv();render()}
+const toks=t=>t.split(' ').map(w=>({w,n:w.replace(/[^a-z]/gi,'').toLowerCase()}));
+function sents(t){const k=toks(t),o=[];let a=0;k.forEach((x,i)=>{if(/[.!?]$/.test(x.w)){o.push({a,b:i,text:k.slice(a,i+1).map(y=>y.w).join(' ')});a=i+1}});return o}
+const sv=()=>{try{LS.set('wf_session',G)}catch(e){}};
+function resume(){const x=LS.get('wf_session');if(!x)return;G=x;G.mode='solo';G.turn=0;AU();if(G.paused){G.paused=false}G.t0=Date.now();G.tk=null;SEL=[];TS=[];render()}
+const elapsed=()=>G.el+(G.paused?0:Date.now()-G.t0);
+// ---------- screen ----------
+const found=()=>G.tg.filter(t=>t.found).length;
+function sbHTML(){const N=G.names,tot=G.tg.length;
+return `<div class="tm"><b>${esc(N[0])}</b><div class="n">${fmt(G.sc[0])}</div></div><div class="mid">${found()} of ${tot} found<small>${G.auto&&S.order?esc(S.T[S.order[S.ti].t].name)+' | Round '+(S.ti+1)+' of '+S.order.length:esc(G.prog)}</small></div>${G.tm?`<div class="tm"><b>Time left</b><div class="n" id="tmv">${(()=>{const s=Math.max(0,Math.ceil(G.tl/1000));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')})()}</div></div>`:`<div class="tm"><b>Words found</b><div class="n">${found()}/${tot}</div></div>`}`}
+function hintCells(){if(G.hw==null||G.done)return new Set();const t=G.tg[G.hw];if(!t||t.found||!t.paths)return new Set();const p=t.paths[0],a=p[0],b=p[p.length-1];return new Set(G.hl>=2?[a.join(','),b.join(',')]:[a.join(',')])}
+function hintToks(){const o=new Set();if(G.hw==null||G.done)return o;const t=G.tg[G.hw];if(!t||t.found)return o;if(t.rg){if(G.hl>=2)for(let i=t.rg[0];i<=t.rg[1];i++)o.add(i);else o.add(t.rg[0])}else if(t.idx){if(G.hl>=2)t.idx.forEach(i=>o.add(i));else o.add(t.idx[0])}return o}
+function boardHTML(){const mp={},ms=new Set(),hc=hintCells();G.tg.forEach((t,i)=>{if(t.fp)t.fp.forEach(p=>{const k=p[0]+','+p[1];if(t.found)mp[k]=i%6;else ms.add(k)})});let h='';
+for(let i=0;i<G.n;i++)for(let j=0;j<G.n;j++){const k=i+','+j;h+=`<div class="cell ${k in mp?'f f'+mp[k]:ms.has(k)?'ms':''} ${hc.has(k)?'hint':''}" data-r="${i}" data-c="${j}">${G.grid[i][j]}</div>`}
+return `<div class="board" id="bd" style="--n:${G.n}" onpointerdown="pd(event)" onpointermove="pm(event)" onpointerup="pu(event)" onpointercancel="pu(event)">${h}</div>`}
+function textHTML(){const tk=toks(TX[G.tx].t),f=new Set(),m=new Set(),hk=hintToks();G.tg.forEach(t=>{const S2=t.found?f:(G.done?m:null);if(!S2)return;if(t.rg)for(let i=t.rg[0];i<=t.rg[1];i++)S2.add(i);if(t.idx)t.idx.forEach(i=>S2.add(i))});
+return `<div class="txt">${tk.map((x,i)=>`<span class="w ${f.has(i)?'fnd':''} ${m.has(i)?'mis':''} ${hk.has(i)?'hint':''}" data-i="${i}" onclick="tw(${i})">${esc(x.w)}</span>`).join(' ')}</div>`}
+function panHTML(){const t=G.cur!=null?G.tg[G.cur]:null;
+if(G.done){const c=S.cur||{};return `<div class="rd">HUNT FINISHED</div><div class="msgl" style="font-size:2.6vh">${found()} of ${G.tg.length} words found. Missed words are marked on the puzzle.</div><div class="chips" style="max-height:26vh">${G.tg.map(t=>`<span class="chip ${t.found?'on':'ms'}">${esc(short(t.w,22))}</span>`).join('')}</div><div class="acts"><button class="pri" onclick="showReport()">Show report</button><button onclick="again()">New puzzle</button><button onclick="setup()">Back to setup</button></div>`}
+if(t){const tx=G.kind=='text'&&G.tk!='pd',w=G.kind=='grid'||G.tk=='pd';let big;
+if(G.rs=='model'){big=G.kind=='grid'?toks_(t).map(esc).join(' - '):esc(t.w)}else if(G.rs=='hint'&&G.kind=='grid')big='<span>'+hl(t.w,PG[G.pidx].p[t.pi])+'</span>';else big=esc(t.w);
+const tip=G.kind=='grid'?PG[G.pidx].p[t.pi][2]:TIPS[G.tk];
+const body=G.rs=='read'?(G.hints?`<button class="g1" onclick="rate('ok')">Read correctly (+5)</button><button class="g3" onclick="rate('again')">Try again</button>`:`<button class="g1" onclick="rate('ok')">Read correctly (+5)</button><button class="g4" onclick="rate('no')">Not yet</button>`)
+:G.rs=='hint'?`<button class="g1" onclick="rate('ok')">Read correctly (+3)</button><button class="g3" onclick="rate('again')">Try again</button>`
+:`<button class="g1" onclick="rate('ok')">Read after model (+2)</button><button class="g4" onclick="rate('no')">Not yet</button>`;
+return `<div class="rd">${G.rs=='read'?'WORD DISCOVERED  +'+t.dis+(t.hinted?' (HINT USED: HALF POINTS)':''):G.rs=='hint'?'HINT':'LISTEN, THEN READ'}</div><div class="rword ${tx?'t':''}">${big}</div>
+<div class="ref">${G.rs=='read'?'Read it aloud. The teacher confirms.':G.rs=='hint'?esc(tip)+' Say each sound, then blend them.':'Hear it, then say it together.'}</div>
+${G.rs=='model'&&window.speechSynthesis?`<button onclick="say('${esc(t.w).replace(/'/g,"\\'")}')">Hear the word</button>`:''}
+<div class="tb">${body}</div><button class="ghost" onclick="rate('skip')">Skip for now</button>`}
+const cl=G.kind=='text'&&G.tk!='pd'?(G.tg.find(x=>!x.found)||{}).clue:'';
+return `<div class="rd">${esc(G.prog.toUpperCase())}${G.pats.length?' | '+esc(G.pats.join(', ').toUpperCase()):''}</div>${cl?`<div class="clue">${esc(cl)}</div>`:''}
+<div class="msgl" id="msg">${esc(G.msg||(G.kind=='grid'?'Find a hidden word. Tap the letters in order, or drag across them.':G.tk=='pd'?'Tap each word with the target pattern.':G.tk=='ph'?'Tap the first word, then the last word of the phrase.':'Tap a word in the sentence you find.'))}</div>
+<div class="selw ${G.kind=='text'?'t':''}" id="selw">&nbsp;</div>
+<div class="row">${G.kind=='grid'||G.tk!='pd'?`<button onclick="undo()">Undo</button><button onclick="clr()">Clear</button><button class="pri" onclick="chk()">Check</button>`:''}</div>
+<div class="acts">${G.hints?'<button onclick="hint()">Hint</button>':''}<button class="fin" onclick="fin()">Finish hunt</button></div>${G.hints?'<div class="fine" style="font-size:1.5vh">Using a hint gives half discovery points for that word.</div>':''}
+<div class="chips">${G.tg.map(t=>`<span class="chip ${t.found?'on':''}">${t.found?esc(short(t.w,22)):G.kind=='grid'?'_ '.repeat(t.w.length).trim():'?'}</span>`).join('')}</div>`}
+const short=(w,n)=>w.length>n?w.slice(0,n-3)+'...':w;
+function toks_(t){const P=PG[G.pidx].p[t.pi],gs=(P[1]?P[1].split('/'):[]).sort((a,b)=>b.length-a.length),o=[];let i=0;if(t.seg.includes('+'))return t.seg.split(' + ');while(i<t.w.length){const g=gs.find(x=>t.w.startsWith(x,i));if(g){o.push(g);i+=g.length}else{o.push(t.w[i]);i++}}return o}
+function hl(w,P){if(!P[1])return esc(w);const re=new RegExp('('+P[1].split('/').sort((a,b)=>b.length-a.length).join('|')+')','gi');return w.split(re).map((x,i)=>x?(i%2?'<span class="hl">'+esc(x)+'</span>':esc(x)):'').filter(Boolean).join('-')}
+function say(t){try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.rate=.8;u.lang='en-US';speechSynthesis.speak(u)}catch(e){}}
+function render(){SEL=[];TS=[];app.innerHTML=`<div class="hdr"><div class="brand">Word <span>Finder</span></div><div class="row"><button class="ghost" id="bs" onclick="songBtn()">Music: ${song?SONGS[song-1].n:'Off'}</button><button class="ghost" onclick="fxBtn(this)">Effects: ${fxOn?'On':'Off'}</button><button class="ghost" onclick="rules()">Rules</button><button class="ghost" onclick="pause()">Pause</button><button class="ghost" onclick="newGame()">New game</button></div></div>
+<div id="sb" class="card">${sbHTML()}</div><div class="main2"><div class="left">${G.kind=='grid'?boardHTML():textHTML()}</div><div class="pan card" id="pan">${panHTML()}</div></div>`}
+function pause(){G.el+=Date.now()-G.t0;G.paused=true;G.tk=null;sv();modal(`<div class="ans">Paused</div><div class="q2" style="color:var(--mut)">The puzzle is hidden until you resume.</div><button class="pri big" onclick="resumeP()">Resume</button>`)}
+function resumeP(){G.paused=false;G.t0=Date.now();closeM()}
+// ---------- selection (tap or drag) ----------
+let SEL=[],TS=[],drag=false,dragged=false;
+const cellAt=e=>{const el=document.elementFromPoint(e.clientX,e.clientY),c=el&&el.closest?el.closest('.cell'):null;return c?[+c.dataset.r,+c.dataset.c]:null};
+const same=(a,b)=>a[0]==b[0]&&a[1]==b[1];
+function okNext(p){const L=SEL.length;if(!L)return true;const a=SEL[L-1],dr=p[0]-a[0],dc=p[1]-a[1];if(!dr&&!dc||Math.abs(dr)>1||Math.abs(dc)>1)return false;if(L>1){const b=SEL[L-2];return dr==a[0]-b[0]&&dc==a[1]-b[1]}return true}
+function paintSel(){document.querySelectorAll('.cell').forEach(c=>c.classList.toggle('sel',SEL.some(p=>p[0]==+c.dataset.r&&p[1]==+c.dataset.c)));const s=$('#selw');if(s&&G.kind=='grid')s.textContent=SEL.map(p=>G.grid[p[0]][p[1]]).join(' ')||'\u00a0'}
+function pd(e){if(G.paused||G.done||G.cur!=null)return;const p=cellAt(e);if(!p)return;drag=true;dragged=false;const i=SEL.findIndex(q=>same(q,p));
+if(i>=0){if(i==SEL.length-1){SEL.pop();drag=false}else SEL=[p]}else if(okNext(p))SEL.push(p);else SEL=[p];paintSel();fx('click')}
+function pm(e){if(!drag)return;const p=cellAt(e);if(!p||!SEL.length)return;const l=SEL[SEL.length-1];if(same(p,l))return;
+if(SEL.length>1&&same(p,SEL[SEL.length-2])){SEL.pop();dragged=true}else if(!SEL.some(q=>same(q,p))&&okNext(p)){SEL.push(p);dragged=true}paintSel()}
+function pu(){if(!drag)return;drag=false;if(dragged&&SEL.length>1)chk()}
+const key=p=>p.map(q=>q.join(',')).join(';');
+function setMsg(t){G.msg=t;const m=$('#msg');if(m)m.textContent=t}
+function undo(){if(G.kind=='grid'){SEL.pop();paintSel()}else{TS.pop();paintT()}}
+function clr(){if(G.kind=='grid'){SEL=[];paintSel()}else{TS=[];paintT()}}
+function chk(){if(G.paused||G.done||G.cur!=null)return;
+if(G.kind=='grid'){if(SEL.length<2)return setMsg('Select at least two letters first.');const k=key(SEL),rk=key([...SEL].reverse());
+for(const t of G.tg){for(const p of t.paths){const pk=key(p);if(pk==k||pk==rk){if(t.found)return clrMsg('You already discovered that word.');t.fp=p;return discover(t.id)}}}
+G.wrong=(G.wrong||0)+1;if(G.dec.some(p=>{const pk=key(p);return pk==k||pk==rk})){G.decoy=(G.decoy||0)+1;clrMsg('That is a real word, but it is not one of the targets. Keep looking.')}else clrMsg('That is not a target word. Try another.');return}
+const a=Math.min(...TS),b=Math.max(...TS);if(!TS.length)return setMsg('Select something first.');const t=G.tg.find(x=>x.rg&&x.rg[0]==a&&x.rg[1]==b);
+if(t){if(t.found)return setMsg('You already discovered that one.');return discover(t.id)}G.wrong=(G.wrong||0)+1;setMsg('That is not quite it. Check the clue and try again.');TS=[];paintT()}
+const DIS=' Using a hint: this word earns half points (+2.5 instead of +5).';
+function hint(){if(G.paused||G.done||G.cur!=null)return;let t=G.hw!=null?G.tg[G.hw]:null;
+if(!t||t.found){t=G.tg.find(x=>!x.found);if(!t)return;G.hw=t.id;G.hl=0}
+G.hl=Math.min(2,(G.hl||0)+1);t.hinted=true;t.hc=(t.hc||0)+1;G.hn=(G.hn||0)+1;fx('click');let m;
+if(G.kind=='grid'){const P=PG[G.pidx].p[t.pi];m=(G.hl==1?`Hint: look for a ${t.w.length}-letter word that starts with "${t.w[0]}". Its first letter is glowing. ${P[2]}`:`Hint: the first and last letters of a ${t.w.length}-letter word are glowing. Trace from one to the other.`)+DIS}
+else if(G.tk=='pd')m=(G.hl==1?`Hint: one word with the pattern starts with "${t.w[0]}". It is glowing.`:`Hint: every glowing word has the target letters.`)+DIS;
+else m=(G.hl==1?`Hint: the first word is glowing. Tap it, then find the last word.`:`Hint: the whole answer is glowing. Tap the first word, then the last word.`)+DIS;
+G.msg=m;sv();const hc=hintCells(),hk=hintToks();document.querySelectorAll('.cell').forEach(c=>c.classList.toggle('hint',hc.has(c.dataset.r+','+c.dataset.c)));document.querySelectorAll('.w').forEach(w=>w.classList.toggle('hint',hk.has(+w.dataset.i)));setMsg(m)}
+function fin(){if(G.paused||G.done||G.cur!=null)return;const f=found(),n=G.tg.length;fx('click');
+modal(`<div class="ans">Finish the hunt?</div><div class="q2" style="color:var(--mut)">${f} of ${n} words found. The words not found will be shown on the puzzle and saved for review.</div><div class="row"><button class="pri big" style="font-size:2.8vh" onclick="endHunt()">Yes, finish</button><button class="big" style="font-size:2.8vh" onclick="closeM()">Keep hunting</button></div>`)}
+function endHunt(){closeM();G.tg.forEach(t=>{if(!t.found){t.miss=true;if(t.paths)t.fp=t.paths[0]}});G.hw=null;G.hl=0;fx('whistle');report()}
+function clrMsg(t){SEL=[];paintSel();fx('bad');setMsg(t)}
+function tw(i){if(G.paused||G.done||G.cur!=null)return;fx('click');
+if(G.tk=='pd'){const t=G.tg.find(x=>x.idx.includes(i));if(!t){G.wrong=(G.wrong||0)+1;return setMsg('Not a match. Look for words with the target letters.')}if(t.found)return setMsg('You already discovered that word.');return discover(t.id)}
+if(G.tk=='sc'){const s=sents(TX[G.tx].t).find(x=>i>=x.a&&i<=x.b);TS=[s.a,s.b]}else{if(TS.length==1||TS.length==0)TS.push(i);else TS=[i];TS=TS.length==2?[Math.min(...TS),Math.max(...TS)]:TS}paintT()}
+function paintT(){const a=TS.length?Math.min(...TS):-1,b=TS.length?Math.max(...TS):-1;document.querySelectorAll('.w').forEach(w=>{const i=+w.dataset.i;w.classList.toggle('sel',TS.length&&i>=a&&i<=b)});const s=$('#selw');if(s)s.textContent=TS.length?toks(TX[G.tx].t).slice(a,b+1).map(x=>x.w).join(' '):'\u00a0'}
+// ---------- discover, read, score ----------
+function discover(i){const t=G.tg[i];G.tk=null;t.found=true;t.ft=Math.round(elapsed()/1000);t.dis=t.hinted?2.5:5;G.sc[G.turn]+=t.dis;if(G.hw===i){G.hw=null;G.hl=0}t.tm=G.turn;G.cur=i;G.rs='read';G.msg='';fx('ok');toast('+'+fmt(t.dis)+' for finding the word',t.hinted?'Hint used: half of 5 points':'Full discovery points');sv();render()}
+function rate(k){const t=G.tg[G.cur];if(!t)return;t.ra=G.rs=='read'?1:G.rs=='hint'?2:3;
+if(k=='ok'){const rs=G.rs,p=rs=='read'?5:rs=='hint'?3:2;t.rd=p;t.st=rs=='read'?'first':rs=='hint'?'retry':'model';G.sc[G.turn]+=p;fx('assist');const bd=fmt(t.dis)+' discovery'+(t.hinted?' (half, hint used)':'')+' + '+fmt(p)+' reading = '+fmt(t.dis+p)+' points for this word';G.msg='Last word: '+bd+'.';toast('+'+fmt(p)+' for reading',bd);return next()}
+if(k=='again'){G.rs=G.rs=='read'?'hint':'model';fx('click');return render()}
+if(k=='no'){t.st='review';fx('bad');G.msg='Last word: '+fmt(t.dis)+' discovery + 0 reading = '+fmt(t.dis)+' points. Saved for review.';toast('+0 for reading','Saved for review. This word: '+fmt(t.dis)+' points');return next()}
+t.st='skip';G.msg='Last word: '+fmt(t.dis)+' discovery + 0 reading = '+fmt(t.dis)+' points. Skipped.';toast('+0 for reading','Skipped. This word: '+fmt(t.dis)+' points');next()}
+function next(){const done=G.tg.every(t=>t.found&&t.st),who=G.turn;G.cur=null;G.rs=null;
+if(done){const good=G.tg.every(t=>t.st=='first'||t.st=='retry'||t.st=='model');if(good){G.bonus=10;G.sc[who]+=10;toast('+10 completion bonus','Every word found and read')}sv();render();fx('goal');cf(50);setTimeout(report,1400);return}
+sv();render()}
+// ---------- results and running record ----------
+function report(){const R=G.tg,att=R.filter(t=>t.st&&t.st!='skip'),n=att.length||1,first=R.filter(t=>t.st=='first').length,retry=R.filter(t=>t.st=='retry').length,model=R.filter(t=>t.st=='model').length,rev=R.filter(t=>t.st=='review'||t.st=='skip'),miss=R.filter(t=>!t.found),acc=Math.round(first/n*100);
+const rv=[...new Set(R.filter(t=>t.st=='review'||t.st=='retry'||t.st=='model').map(t=>short(t.w,28)))],mw=miss.map(t=>short(t.w,28));const d=new Date(),score=String(G.sc[0]);
+const c={id:Date.now(),date:d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),teacher:U?U.name:'',names:G.names,mode:G.mode,prog:G.prog,pats:G.pats,ch:DF[G.df],score,sc:G.sc.slice(),acc,first,retry,model,review:rev.length,hard:rv,missed:mw,fc:R.length-miss.length,tot:R.length,bonus:G.bonus,time:Math.floor(elapsed()/60000)+':'+String(Math.floor(elapsed()/1000)%60).padStart(2,'0'),rec:R.map(t=>({w:short(t.w,50),st:t.st,dis:t.dis,rd:t.rd,tm:t.tm,fd:t.found}))};
+const au=G.auto&&S.order;if(U&&!au){const k='wf_rec_'+U.email,a=LS.get(k)||[];a.unshift(c);LS.set(k,a.slice(0,30))}try{LS.set('wf_session',null)}catch(e){}if(!G.saved){G.saved=true;saveResult(c)}S.cur=c;G.done=true;render();au?turnDone(c):showReport()}
+function showReport(){const c=S.cur,R=G.tg,full=c.fc==c.tot,rv=c.hard,mw=c.missed||[],sc=c.sc||G.sc;
+const head=full?'Mission complete!':'Good effort! '+c.fc+' of '+c.tot+' words found.';
+modal(`<div class="title" style="font-size:4vh">${full?'Mission complete':'Hunt finished'}</div><div class="ans" style="font-size:3.4vh">${head}</div><div class="q2" style="font-size:2.4vh;color:var(--mut)">Score: ${fmt(sc[0])}${c.bonus?' (includes +10 completion bonus)':''}</div>
+<div class="st"><div><b>${c.fc}/${c.tot}</b><small>Words discovered</small></div><div><b>${c.acc}%</b><small>First-attempt reading accuracy</small></div><div><b>${c.first}</b><small>Read first try</small></div><div><b>${c.retry}</b><small>After a retry</small></div><div><b>${c.model}</b><small>After a model</small></div><div><b>${c.review}</b><small>For review or skipped</small></div></div>
+<div class="nt"><b>Words to revisit:</b> ${rv.length?esc(rv.slice(0,8).join(', ')):'none this round'}${mw.length?`<br><b>Not found:</b> ${esc(mw.slice(0,10).join(', '))}`:''}<br><i>This report is for the teacher only.</i></div>
+<div class="row"><button class="pri" style="font-size:2.4vh" onclick="sendRec(S.cur)">Send report to teacher email</button>${mw.length?`<button style="font-size:2.4vh" onclick="closeM()">View puzzle</button>`:''}${(rv.length||mw.length)&&G.kind=='grid'?`<button style="font-size:2.4vh" onclick="replay()">Replay difficult words</button>`:''}<button style="font-size:2.4vh" onclick="again()">New puzzle</button><button style="font-size:2.4vh" onclick="setup()">Back to setup</button></div>`)}
+function again(){if(G.kind=='grid'){S.pool=pool();S.specs=S.pool.slice(0,Math.min(S.cnt,S.pool.length))}begin(G.kind=='grid'?S.specs:undefined)}
+function replay(){const sp=G.tg.filter(t=>!t.found||t.st=='review'||t.st=='retry'||t.st=='model').map(t=>({w:(t.seg||t.w).split(' + ').join('+'),pi:t.pi}));begin(sp.length>=2?sp:undefined)}
+const ROW=ST;
+function recText(c){if(c.mode=='class')return classText(c);let t=`RF WORD FINDER - RUNNING RECORD\nDate: ${c.date}\nTeacher: ${c.teacher||'-'}\nStudent/Team: ${c.names.join(' vs ')}\nProgression: ${c.prog} (${c.pats.join(', ')})\nDifficulty: ${c.ch}\n\n`;
+c.rec.forEach((x,i)=>{t+=`${i+1}. ${x.w} - ${x.fd===false?'Not found':(ST[x.st]||'Not read')}${x.dis?' (discovery +'+x.dis+', reading +'+x.rd+')':''}\n`});
+return t+`\nScore: ${c.score}${c.bonus?' (includes completion bonus)':''}\nFirst-attempt accuracy: ${c.acc}%\nRead first try: ${c.first}\nAfter a retry: ${c.retry}\nAfter a model: ${c.model}\nNeeds review or skipped: ${c.review}\nWords to revisit: ${c.hard.join(', ')||'none'}\nNot found: ${(c.missed||[]).join(', ')||'none'}\nTime: ${c.time}\n`}
+function recCSV(c){if(c.mode=='class')return classCSV(c);const q=v=>'"'+String(v).replace(/"/g,'""')+'"';return ['Date,Student/Team,Progression,Item,Result,Discovery points,Reading points'].concat(c.rec.map(x=>[c.date,c.names[0],c.prog,x.w,x.fd===false?'Not found':(ST[x.st]||'Not read'),x.dis,x.rd].map(q).join(','))).join('\n')}
+function sendRec(c){S.cur=c;modal(`<div class="ans" style="font-size:3.4vh">Running record</div><textarea id="rt" readonly>${esc(recText(c))}</textarea><input id="em" type="email" placeholder="Teacher email address" value="${esc(U?U.email:'')}">
+<div class="row"><button class="pri" onclick="mail()">Open email draft</button><button onclick="copyRec()">Copy text</button><button id="dl" style="display:none" onclick="saveRec()">Save as CSV</button><button onclick="closeM()">Close</button></div><div class="fine" id="mm">Your email app opens with the record filled in. Press send there. If nothing opens, use Copy text.</div>`);
+try{(window.claude&&claude.use?claude.use('downloads'):Promise.resolve(null)).then(d=>{S.dl=d;if(d&&$('#dl'))$('#dl').style.display=''}).catch(()=>{})}catch(e){}}
+function msg(t){const m=$('#mm');if(m)m.textContent=t}
+function mail(){const em=($('#em').value||'').trim(),c=S.cur;if(!/^\S+@\S+\.\S+$/.test(em))return msg('Please enter a valid email address.');
+let b=recText(c);const sj=encodeURIComponent('Running record: '+c.names.join(' vs ')+' - '+c.date);
+while(encodeURIComponent(b).length>1700)b=b.slice(0,-60);const a=document.createElement('a');a.href='mailto:'+em+'?subject='+sj+'&body='+encodeURIComponent(b);a.target='_top';document.body.appendChild(a);a.click();a.remove();
+msg('If your email app did not open, press Copy text and paste the record into an email.')}
+function copyRec(){const t=recText(S.cur);const fb=()=>{const x=$('#rt');x.removeAttribute('readonly');x.select();try{document.execCommand('copy');msg('Copied. Paste it into an email.')}catch(e){msg('Select the text above and copy it.')}x.setAttribute('readonly','')};
+try{navigator.clipboard.writeText(t).then(()=>msg('Copied. Paste it into an email.')).catch(fb)}catch(e){fb()}}
+function saveRec(){if(!S.dl)return;S.dl.save({filename:'running-record-'+new Date().toISOString().slice(0,10)+'.csv',data:recCSV(S.cur)}).then(()=>msg('Saved.')).catch(e=>msg(e&&e.code=='declined'?'Save cancelled.':'Saving is not available here. Use Copy text.'))}
+function history_(){const a=LS.get('wf_rec_'+U.email)||[];modal(`<div class="ans" style="font-size:3.4vh">Saved running records</div><div class="hist">${a.length?a.map((c,i)=>`<div><span><b>${esc(c.names.join(' vs '))}</b> | ${esc(c.prog)} | ${c.acc}% | ${esc(c.date)}</span><button onclick="sendRec(LS.get('wf_rec_'+U.email)[${i}])">Open</button></div>`).join(''):'<div>No records yet. Finish a match to save one.</div>'}</div><button onclick="closeM()">Close</button>`)}
+
+function newGame(){fx('click');modal(`<div class="ans">Start a new game?</div><div class="q2" style="color:var(--mut)">The current hunt will be lost.</div><div class="row"><button class="pri big" style="font-size:2.8vh" onclick="try{LS.set('wf_session',null)}catch(e){};setup()">Yes, new game</button><button style="font-size:2.8vh" onclick="closeM()">Cancel</button></div>`)}
+function cf(n){const C=['#4f63d8','#f0b45a','#a9b6f5','#334155','#f7d79b'];for(let i=0;i<n;i++){const d=document.createElement('span');d.className='cf';d.style.cssText=`left:${r(0,98)}vw;background:${pick(C)};animation-delay:${Math.random()*1.6}s`;document.body.appendChild(d);setTimeout(()=>d.remove(),5500)}}
+// ---------- class mode (auto) ----------
+function pickSpecs(lv){const pg=PG[S.prog],n=S.ac;let all=[];[...S.pats].forEach(pi=>{const P=pg.p[pi],W=wordsOf(P),E=P[4]?P[4][0]:Math.ceil(W.length*.4);W.forEach((w,i)=>all.push({w,pi,t:i<E?0:1,d:w.replace(/\+/g,'')}))});
+if(all.filter(x=>!S.used.has(x.d)).length<n)S.used.clear();const av=all.filter(x=>!S.used.has(x.d)),e=shuf(av.filter(x=>!x.t)),h=shuf(av.filter(x=>x.t));let o;
+if(lv=='mix')o=shuf(av).slice(0,n);else{o=e.slice(0,lv=='easy'?n:n>=5?2:1);if(lv=='adv')o=o.concat(h.slice(0,n-o.length));if(o.length<n)o=o.concat(shuf(av.filter(x=>!o.includes(x))).slice(0,n-o.length))}
+o.forEach(x=>S.used.add(x.d));return o.map(x=>({w:x.w,pi:x.pi}))}
+function beginAuto(){closeM();const T=ros().map(t=>({name:t.name,pl:shuf(t.pl)})),ord=[],tq=shuf(T.map((_,i)=>i)),qs=T.map(t=>[...t.pl]);
+while(qs.some(q=>q.length))tq.forEach(i=>{if(qs[i].length)ord.push({t:i,n:qs[i].pop()})});
+S.sid='s'+Date.now().toString(36);S.T=T;S.order=ord;S.ti=0;S.res=[];S.ts=T.map(()=>0);S.rec=[];S.used=new Set();S.t0=Date.now();AU();callStu()}
+function callStu(){const o=S.order[S.ti],t=S.T[o.t],nm=t.pl;
+app.innerHTML=`<div class="hdr"><div class="brand">Word <span>Finder</span></div><div class="row"><button class="ghost" onclick="newGame()">New game</button></div></div>
+<div class="auth"><div class="tag">Round ${S.ti+1} of ${S.order.length}</div><div class="logo" style="font-size:9vh">${esc(t.name)}</div><div class="tag">${PG[S.prog].k=='w'?lvTxt(lvFor(t.name)):'same text for every student'}</div><div class="logo" id="cn" style="font-size:11vh">${esc(nm.length>1?pick(nm):o.n)}</div><button class="pri big" id="rb" disabled onclick="startTurn()">I am ready</button><button class="ghost" id="ab" ${nm.length>1?'disabled':''} onclick="absentStu()">Student absent? Call another</button></div>`;
+if(nm.length>1){let k=0;const iv=setInterval(()=>{const e=$('#cn');if(!e)return clearInterval(iv);if(++k<14){e.textContent=pick(nm);return}clearInterval(iv);e.textContent=o.n;$('#rb').disabled=false;$('#ab').disabled=false;fx('click')},90)}else $('#rb').disabled=false}
+function absentStu(){const o=S.order[S.ti],T=S.T[o.t];T.pl=T.pl.filter(n=>n!==o.n);S.order.splice(S.ti,1);
+const rest=S.order.map((_,i)=>i).filter(i=>i>=S.ti);
+if(!rest.length){if(S.res.length)return classReport();alert('No students left to call.');return setup()}
+const same=rest.filter(i=>S.order[i].t==o.t),j=pick(same.length?same:rest),nx=S.order.splice(j,1)[0];S.order.splice(S.ti,0,nx);fx('click');callStu()}
+function skipStu(){S.ti++;S.ti>=S.order.length?classReport():callStu()}
+function startTurn(){const o=S.order[S.ti];S.names=[o.n];if(PG[S.prog].k=='w')begin(pickSpecs(lvFor(S.T[o.t].name)));else begin()}
+function turnDone(c){const o=S.order[S.ti],tn=S.T[o.t].name,sc=G.sc[0];S.ts[o.t]+=sc;S.res.push({n:o.n,tm:tn,sc,fc:c.fc,tot:c.tot,acc:c.acc,first:c.first,att:G.tg.filter(t=>t.st&&t.st!='skip').length,hard:c.hard,missed:c.missed||[]});c.rec.forEach(x=>S.rec.push({...x,stu:o.n,tn}));
+const last=S.ti+1>=S.order.length;setTimeout(()=>modal(`<div class="ans" style="font-size:3.6vh">${esc(o.n)} scored ${fmt(sc)} points</div><div class="q2" style="color:var(--mut)">${esc(tn)} team total: ${fmt(S.ts[o.t])}</div><div class="st"><div><b>${c.fc}/${c.tot}</b><small>Words discovered</small></div><div><b>${c.acc}%</b><small>Read first try</small></div><div><b>${c.review}</b><small>For review</small></div></div><button class="pri big" style="font-size:2.8vh" onclick="nextStu()">${last?'Class results':'Next student'}</button>`),400)}
+function nextStu(){closeM();S.ti++;S.ti>=S.order.length?classReport():callStu()}
+function classReport(){const T=S.T.map((t,i)=>({name:t.name,sc:S.ts[i],n:S.res.filter(x=>x.tm==t.name).length})).sort((a,b)=>b.sc-a.sc),top=T[0]?T[0].sc:0,win=T.filter(x=>x.sc==top),fs=S.res.reduce((a,x)=>a+x.first,0),at=S.res.reduce((a,x)=>a+x.att,0),acc=at?Math.round(fs/at*100):0,d=new Date(),pg=PG[S.prog];
+const c={id:Date.now(),date:d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),teacher:U?U.name:'',names:['Class '+CN],mode:'class',cls:CN,prog:pg.n,pats:[...S.pats].map(i=>pg.p[i][0]),ch:DF[S.df],teams:T,res:S.res,rec:S.rec,acc,score:String(T.reduce((a,x)=>a+x.sc,0))};
+if(U){const k='wf_rec_'+U.email,a=LS.get(k)||[];a.unshift(c);LS.set(k,a.slice(0,30))}
+S.cur=c;fx('goal');cf(60);modal(`<div class="title" style="font-size:4vh">Class complete</div><div class="ans" style="font-size:3.4vh">${win.length>1?'It is a tie!':esc(win[0].name)+' win'+(/s$/i.test(win[0].name)?'':'s')+'!'}</div>
+<div class="st">${T.map(x=>`<div><b>${fmt(x.sc)}</b><small>${esc(x.name)} (${x.n} students, avg ${x.n?fmt(Math.round(x.sc/x.n*10)/10):0})</small></div>`).join('')}</div>
+<div class="hist">${S.res.map(x=>`<div><span><b>${esc(x.n)}</b> (${esc(x.tm)})</span><span>${fmt(x.sc)} pts | ${x.fc}/${x.tot} found | ${x.acc}%${x.hard.length?' | revisit: '+esc(x.hard.slice(0,3).join(', ')):''}</span></div>`).join('')}</div>
+<div class="row"><button class="pri" style="font-size:2.4vh" onclick="sendRec(S.cur)">Send report to teacher email</button><button style="font-size:2.4vh" onclick="beginAuto()">Play again</button><button style="font-size:2.4vh" onclick="setup()">Back to setup</button></div>`)}
+const classText=c=>{let t=`RF WORD FINDER - CLASS RUNNING RECORD\nDate: ${c.date}\nTeacher: ${c.teacher||'-'}\nClass: ${c.cls}\nProgression: ${c.prog} (${c.pats.join(', ')})\nFirst-attempt reading accuracy: ${c.acc}%\n\nTEAM STANDINGS\n`;c.teams.forEach(x=>{t+=`${x.name}: ${fmt(x.sc)} points (${x.n} students)\n`});t+='\nSTUDENTS\n';c.res.forEach(x=>{t+=`${x.n} (${x.tm}): ${fmt(x.sc)} pts, ${x.fc}/${x.tot} found, ${x.acc}% first try${x.hard.length?'. Revisit: '+x.hard.join(', '):''}${x.missed.length?'. Not found: '+x.missed.join(', '):''}\n`});return t};
+const classCSV=c=>{const q=v=>'"'+String(v).replace(/"/g,'""')+'"';return ['Date,Class,Team,Student,Progression,Item,Result,Discovery points,Reading points'].concat(c.rec.map(x=>[c.date,c.cls,x.tn,x.stu,c.prog,x.w,x.fd===false?'Not found':(ST[x.st]||'Not read'),x.dis,x.rd].map(q).join(','))).join('\n')};
+function tick(){if(!G||G.done||!G.tm||G.paused||G.cur!=null){if(G)G.tk=null;return}const n=Date.now();if(G.tk)G.tl-=n-G.tk;G.tk=n;const e=$('#tmv');if(e){const q=Math.max(0,Math.ceil(G.tl/1000));e.textContent=Math.floor(q/60)+':'+String(q%60).padStart(2,'0');e.style.color=q<=10?'#b4442c':''}if(G.tl<=0)timeUp()}
+function timeUp(){if(G.done)return;G.tl=0;fx('whistle');toast('Time is up!','Finishing the hunt');endHunt()}
+setInterval(tick,250);
+function modal(h){closeM();const o=document.createElement('div');o.className='ov';o.id='mod';o.innerHTML=`<div class="box">${h}</div>`;document.body.appendChild(o)}
+function closeM(){const o=$('#mod');if(o)o.remove()}
+
+S.save=LS.get('wf_save')!==false;flushOutbox();addEventListener('online',()=>flushOutbox());S.am=LS.get('wf_mode')=='auto'?'auto':'manual';S.tm=[0,30,60,90,120].includes(LS.get('wf_tm'))?LS.get('wf_tm'):0;if(S.am=='auto'&&CODE)loadCode(CODE);
+{const s=LS.get('wf_fbrt');if(s&&s.email){U={email:s.email,name:s.name||s.email.split('@')[0]};setup()}else auth()}
+</script></body></html>
